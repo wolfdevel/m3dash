@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}Anmelden{% endblock %}
+{% block body %}
+<div class="narrow">
+  <h1>Smart Home</h1>
+  <form method="post">
+    <input type="hidden" name="csrf" value="{{ csrf_token() }}">
+    <label for="u">Benutzername</label>
+    <input type="text" id="u" name="username" autocapitalize="off" autocorrect="off" autofocus>
+    <label for="p">Passwort</label>
+    <input type="password" id="p" name="password">
+    <label><input type="checkbox" name="remember" value="1" checked> Angemeldet bleiben</label>
+    <input type="submit" value="Anmelden">
+  </form>
+</div>
+{% endblock %}

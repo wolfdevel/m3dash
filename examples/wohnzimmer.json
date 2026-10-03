@@ -1,0 +1,82 @@
+{
+  "columns": 3,
+  "refresh": 10,
+  "chart_refresh": 300,
+  "widgets": [
+    {
+      "type": "heading",
+      "label": "Wohnzimmer",
+      "width": 3
+    },
+    {
+      "type": "value",
+      "label": "Temperatur",
+      "topic": "zigbee2mqtt/wohnzimmer_sensor",
+      "json_path": "temperature",
+      "unit": "°C",
+      "decimals": 1,
+      "stale_after": 3600
+    },
+    {
+      "type": "gauge",
+      "label": "Luftfeuchte",
+      "topic": "zigbee2mqtt/wohnzimmer_sensor",
+      "json_path": "humidity",
+      "unit": "%",
+      "decimals": 0,
+      "min": 0,
+      "max": 100,
+      "warn_above": 65
+    },
+    {
+      "type": "bar",
+      "label": "Batterie",
+      "topic": "zigbee2mqtt/wohnzimmer_sensor",
+      "json_path": "battery",
+      "unit": "%",
+      "decimals": 0,
+      "min": 0,
+      "max": 100,
+      "warn_below": 20
+    },
+    {
+      "type": "switch",
+      "label": "Stehlampe",
+      "topic": "zigbee2mqtt/stehlampe",
+      "json_path": "state",
+      "command_topic": "zigbee2mqtt/stehlampe/set",
+      "payload_on": "{\"state\":\"ON\"}",
+      "payload_off": "{\"state\":\"OFF\"}"
+    },
+    {
+      "type": "button",
+      "label": "Garagentor",
+      "text": "Öffnen/Schließen",
+      "command_topic": "garage/tor/set",
+      "payload": "TOGGLE",
+      "confirm": true
+    },
+    {
+      "type": "text",
+      "label": "Status Waschmaschine",
+      "topic": "haushalt/waschmaschine/status",
+      "map": {
+        "0": "Aus",
+        "1": "Läuft",
+        "2": "Fertig"
+      }
+    },
+    {
+      "type": "chart",
+      "label": "Temperatur letzte 24 h",
+      "width": 3,
+      "hours": 24,
+      "series": [
+        {
+          "source": "zigbee2mqtt/wohnzimmer_sensor/temperature",
+          "label": "Wohnzimmer"
+        }
+      ]
+    }
+  ]
+}

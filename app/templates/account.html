@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}Mein Konto{% endblock %}
+{% block body %}
+<div class="box narrow">
+  <h1>Mein Konto</h1>
+  <p class="hint">Angemeldet als <b>{{ user.username }}</b> ({{ user.role }})</p>
+  <form method="post">
+    <input type="hidden" name="csrf" value="{{ csrf_token() }}">
+    <label for="t">Darstellung</label>
+    <select id="t" name="theme">
+      {% for k, v in [('auto', 'Automatisch (Kindle → E-Ink)'), ('light', 'Hell'), ('dark', 'Dunkel'), ('eink', 'E-Ink')] %}
+      <option value="{{ k }}"{% if user.theme == k %} selected{% endif %}>{{ v }}</option>{% endfor %}
+    </select>
+    <label for="s">Start-Dashboard</label>
+    <select id="s" name="start_dashboard">
+      <option value="">Übersicht</option>
+      {% for d in nav %}<option value="{{ d.id }}"{% if user.start_dashboard == d.id %} selected{% endif %}>{{ d.title }}</option>{% endfor %}
+    </select>
+    <input type="submit" value="Speichern">
+  </form>
+  <h2 style="margin-top:24px">Passwort ändern</h2>
+  <form method="post">
+    <input type="hidden" name="csrf" value="{{ csrf_token() }}">
+    <label for="o">Aktuelles Passwort</label><input type="password" id="o" name="old_password">
+    <label for="n">Neues Passwort</label><input type="password" id="n" name="new_password">
+    <input type="submit" value="Passwort ändern">
+  </form>
+</div>
+{% endblock %}

@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}Benutzer{% endblock %}
+{% block body %}
+<div class="box">
+{% include "admin/_nav.html" %}
+<h1>{% if u %}Benutzer {{ u.username }}{% else %}Neuer Benutzer{% endif %}</h1>
+<form method="post" style="max-width:420px">
+  <input type="hidden" name="csrf" value="{{ csrf_token() }}">
+  {% if not u %}<label for="n">Benutzername</label><input type="text" id="n" name="username" value="{{ request.form.username }}" autocapitalize="off">{% endif %}
+  <label for="p">{% if u %}Neues Passwort (leer lassen = unverändert){% else %}Passwort{% endif %}</label>
+  <input type="password" id="p" name="password">
+  <label for="r">Rolle</label>
+  <select id="r" name="role">{% for r in roles %}<option value="{{ r }}"{% if (u and u.role == r) or (not u and r == 'viewer') %} selected{% endif %}>{{ r }}</option>{% endfor %}</select>
+  <label for="t">Darstellung</label>
+  <select id="t" name="theme">
+    {% for k, v in [('auto', 'Automatisch (Kindle → E-Ink)'), ('light', 'Hell'), ('dark', 'Dunkel'), ('eink', 'E-Ink')] %}
+    <option value="{{ k }}"{% if u and u.theme == k %} selected{% endif %}>{{ v }}</option>{% endfor %}
+  </select>
+  <label for="s">Start-Dashboard</label>
+  <select id="s" name="start_dashboard"><option value="">Übersicht</option>
+    {% for d in dashboards %}<option value="{{ d.id }}"{% if u and u.start_dashboard == d.id %} selected{% endif %}>{{ d.title }}</option>{% endfor %}</select>
+  <label>Freigegebene Dashboards (Admins sehen immer alle)</label>
+  {% for d in dashboards %}<label style="margin:4px 0"><input type="checkbox" name="dashboards" value="{{ d.id }}"{% if d.id in access %} checked{% endif %}> {{ d.title }}</label>{% endfor %}
+  <input type="submit" value="Speichern">
+</form>
+{% if u %}
+<form method="post" action="{{ url_for('admin.user_delete', uid=u.id) }}" onsubmit="return confirm('Benutzer wirklich löschen?')" style="margin-top:20px">
+  <input type="hidden" name="csrf" value="{{ csrf_token() }}">
+  <input type="submit" value="Benutzer löschen">
+</form>
+{% endif %}
+</div>
+{% endblock %}

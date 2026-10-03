@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block title %}{{ dash.title }}{% endblock %}
+{% block head %}<noscript><meta http-equiv="refresh" content="{{ refresh }}"></noscript>{% endblock %}
+{% block body %}
+<div class="dashhead"><h1>{{ dash.title }}</h1><span class="stamp" id="stamp">Stand {{ now }}</span><span id="msg"></span></div>
+<div class="grid">
+{% for w in cfg.widgets %}{% set i = loop.index0 %}{% set s = states[i] or {'t': '', 'c': '', 'p': 0, 'i': ''} %}
+<div class="cell" style="width:{{ '%.4f'|format(100.0 * w.width / cfg.columns) }}%"><div class="card {{ w.type }} {{ s.c }}" id="w{{ i }}" data-base="card {{ w.type }}">
+{% if w.type == 'heading' %}
+  <h2>{{ w.label }}</h2>
+{% else %}
+  {% if w.label and w.type != 'button' %}<div class="label">{{ w.label }}</div>{% endif %}
+  {% if w.type in ('value', 'text') %}
+  <div class="val" id="v{{ i }}">{{ s.t }}</div>
+  {% elif w.type == 'gauge' %}
+  {% if s.i %}<img class="gauge" id="i{{ i }}" src="{{ s.i }}" alt="{{ s.t }}">{% else %}<img class="gauge" id="i{{ i }}" src="/img/gauge/{{ dash.id }}/{{ i }}.png?th={{ theme }}" alt="–">{% endif %}
+  {% elif w.type == 'bar' %}
+  <div class="val" id="v{{ i }}">{{ s.t }}</div>
+  <div class="track"><div class="fill" id="p{{ i }}" style="width:{{ s.p }}%"></div></div>
+  {% elif w.type in ('switch', 'button') %}
+  <form class="act" method="post" action="{{ url_for('views.action', slug=dash.slug, idx=i) }}"{% if w.confirm %} data-confirm="{{ w.label or w.text }} wirklich ausführen?"{% endif %}>
+    <input type="hidden" name="csrf" value="{{ csrf_token() }}">
+    {% if w.type == 'switch' %}
+    <button type="submit"{% if not can_act %} disabled{% endif %}><span id="v{{ i }}">{{ s.t }}</span></button>
+    {% else %}
+    <button type="submit"{% if not can_act %} disabled{% endif %}>{{ w.text }}</button>
+    {% if w.topic %}<div class="sub" id="v{{ i }}">{{ s.t }}</div>{% endif %}
+    {% endif %}
+  </form>
+  {% elif w.type == 'chart' %}
+  <img class="chart" data-src="/img/chart/{{ dash.id }}/{{ i }}.png?th={{ theme }}&amp;w={{ 300 * w.width }}" src="/img/chart/{{ dash.id }}/{{ i }}.png?th={{ theme }}&amp;w={{ 300 * w.width }}&amp;t={{ chart_bucket }}" alt="{{ w.label }}">
+  {% endif %}
+{% endif %}
+</div></div>{% endfor %}
+</div>
+{% endblock %}
+{% block scripts %}
+<script type="text/javascript">
+var DASH = {state: "{{ url_for('views.dashboard_state', slug=dash.slug) }}", refresh: {{ refresh }}, csrf: "{{ csrf_token() }}", cb: {{ chart_bucket }}};
+</script>
+<script type="text/javascript" src="{{ url_for('static', filename='dash.js') }}?v=1"></script>
+{% endblock %}

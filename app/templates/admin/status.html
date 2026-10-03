@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}Verwaltung{% endblock %}
+{% block body %}
+<div class="box">
+{% include "admin/_nav.html" %}
+<h1>Status</h1>
+<table class="list" style="margin-top:10px">
+  <tr><td>MQTT-Broker</td><td class="mono">{{ cfg.MQTT_HOST }}:{{ cfg.MQTT_PORT }}</td>
+      <td>{% if mqtt.connected %}<span class="ok">verbunden</span>{% else %}<span class="bad">getrennt</span> {{ mqtt.last_error }}{% endif %}</td></tr>
+  <tr><td>Abonnements</td><td class="mono">{{ cfg.MQTT_SUBSCRIBE|join(', ') }}</td><td>{{ topic_count }} Topics mit Werten</td></tr>
+  <tr><td>Senden erlaubt auf</td><td class="mono" colspan="2">{{ cfg.MQTT_PUBLISH_ALLOW|join(', ') }}</td></tr>
+  <tr><td>MariaDB (Historie)</td><td class="mono">{{ cfg.DB_HOST or '–' }}:{{ cfg.DB_PORT }}/{{ cfg.DB_NAME }}</td>
+      <td>{% if db_ok %}<span class="ok">erreichbar</span>{% else %}<span class="bad">nicht erreichbar</span> {{ db_error }}{% endif %}</td></tr>
+  <tr><td>Historien-Abfrage</td><td class="mono" colspan="2">{{ cfg.HISTORY_QUERY }}</td></tr>
+</table>
+<h2 style="margin-top:20px">Letzte Aktionen</h2>
+<table class="list">
+  <tr><th>Zeit</th><th>Benutzer</th><th>Topic</th><th>Payload</th></tr>
+  {% for r in log %}<tr><td>{{ fmt_ts(r.ts) }}</td><td>{{ r.username }}</td><td class="mono">{{ r.topic }}</td><td class="mono">{{ r.payload }}</td></tr>
+  {% else %}<tr><td colspan="4">Noch keine.</td></tr>{% endfor %}
+</table>
+</div>
+{% endblock %}

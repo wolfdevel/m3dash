@@ -131,13 +131,14 @@ def dashboard_edit(did=None):
         if error is None:
             try:
                 data = json.loads(form["config"])
-                widgets.normalize(data, current_app.cfg.MQTT_PUBLISH_ALLOW)  # nur prüfen; gespeichert wird die Eingabe des Admins
+                widgets.normalize(data, current_app.cfg.MQTT_PUBLISH_ALLOW, current_app.cfg.MQTT_COMMAND_PREFIX)  # nur prüfen; gespeichert wird die Eingabe des Admins
             except ValueError as e:
                 error = str(e)
         if error:
             flash(error)
             form["slug"] = slug
-            return render_template("admin/dashboard_edit.html", d=d, form=form, types=widgets.TYPES), 400
+            return render_template("admin/dashboard_edit.html", d=d, form=form, types=widgets.TYPES,
+                               prefix=current_app.cfg.MQTT_COMMAND_PREFIX), 400
         try:
             sort = int(form["sort"] or 0)
         except ValueError:
@@ -147,7 +148,8 @@ def dashboard_edit(did=None):
         if request.form.get("view"):
             return redirect(url_for("views.dashboard", slug=slug))
         return redirect(url_for("admin.dashboard_edit", did=did))
-    return render_template("admin/dashboard_edit.html", d=d, form=form, types=widgets.TYPES)
+    return render_template("admin/dashboard_edit.html", d=d, form=form, types=widgets.TYPES,
+                               prefix=current_app.cfg.MQTT_COMMAND_PREFIX)
 
 
 @bp.route("/dashboards/<int:did>/delete", methods=["POST"])

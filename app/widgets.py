@@ -4,6 +4,7 @@ Das Ergebnis ist bewusst "dumm" für den Browser: fertiger Text, CSS-Klasse, Bal
 Bild-URL. So reicht im Browser ES3-JavaScript (Kindle 4, iPad 2) oder sogar gar keines.
 """
 import json
+import re
 import time
 
 from paho.mqtt.client import topic_matches_sub
@@ -29,7 +30,28 @@ def publish_allowed(topic, allow):
     return any(topic_matches_sub(pattern, topic) for pattern in allow)
 
 
-def normalize(config, publish_allow=None):
+_UMLAUTE = {"ä": "ae", "ö": "oe", "ü": "ue", "ß": "ss"}
+
+
+def subtopic_name(text):
+    """Aus einer Beschriftung einen Topic-Namen machen: "Stehlampe Küche" -> "stehlampe_kueche"."""
+    s = "".join(_UMLAUTE.get(c, c) for c in str(text).lower())
+    return re.sub(r"[^a-z0-9]+", "_", s).strip("_")
+
+
+def _command_topic(n, i, prefix):
+    """Sende-Topic eines Schalters/Buttons: Präfix + eigenes Subtopic ("name", sonst aus "label")."""
+    if n.get("command_topic"):
+        return n["command_topic"]
+    name = str(n.get("name") or subtopic_name(n.get("label", "")))
+    if not name:
+        raise ValueError("Widget %d (%s): 'name' (Subtopic) oder 'label' fehlt" % (i + 1, n["type"]))
+    if not re.match(r"^[A-Za-z0-9_-]+(/[A-Za-z0-9_-]+)*$", name):
+        raise ValueError("Widget %d: 'name' darf nur Buchstaben, Ziffern, _ - und / enthalten" % (i + 1))
+    return prefix + name
+
+
+def normalize(config, publish_allow=None, command_prefix="m3dash/stat/"):
     """Prüft eine Dashboard-Konfiguration (dict) und ergänzt Standardwerte."""
     if not isinstance(config, dict):
         raise ValueError("Die Konfiguration muss ein JSON-Objekt sein")
@@ -61,9 +83,9 @@ def normalize(config, publish_allow=None):
             n["max"] = _num(n.get("max", 100), "max", i)
             if n["max"] <= n["min"]:
                 raise ValueError("Widget %d: 'max' muss größer als 'min' sein" % (i + 1))
+        if t in ("switch", "button"):
+            n["command_topic"] = _command_topic(n, i, command_prefix)
         if t == "switch":
-            if not n.get("command_topic"):
-                raise ValueError("Widget %d (switch): 'command_topic' fehlt" % (i + 1))
             n.setdefault("topic", n["command_topic"])
             n.setdefault("on_value", "ON")
             n.setdefault("off_value", "OFF")
@@ -72,8 +94,6 @@ def normalize(config, publish_allow=None):
             n.setdefault("text_on", "AN")
             n.setdefault("text_off", "AUS")
         if t == "button":
-            if not n.get("command_topic"):
-                raise ValueError("Widget %d (button): 'command_topic' fehlt" % (i + 1))
             n.setdefault("payload", "")
             n.setdefault("text", n["label"] or "Ausführen")
         if t in ("switch", "button"):
@@ -99,12 +119,12 @@ def normalize(config, publish_allow=None):
     return out
 
 
-def parse(text):
+def parse(text, command_prefix="m3dash/stat/"):
     try:
         data = json.loads(text)
     except ValueError as e:
         raise ValueError("Kein gültiges JSON: %s" % e)
-    return normalize(data)
+    return normalize(data, command_prefix=command_prefix)
 
 
 def topics_of(config):
@@ -232,10 +252,10 @@ EXAMPLE = {
         {"type": "bar", "label": "Batterie", "topic": "zigbee2mqtt/wohnzimmer_sensor",
          "json_path": "battery", "unit": "%", "decimals": 0, "min": 0, "max": 100, "warn_below": 20},
         {"type": "switch", "label": "Stehlampe", "topic": "zigbee2mqtt/stehlampe", "json_path": "state",
-         "command_topic": "m3dash/stehlampe/set", "payload_on": "{\"state\":\"ON\"}",
+         "name": "stehlampe", "payload_on": "{\"state\":\"ON\"}",
          "payload_off": "{\"state\":\"OFF\"}"},
         {"type": "button", "label": "Garagentor", "text": "Öffnen/Schließen",
-         "command_topic": "m3dash/garage/tor", "payload": "TOGGLE", "confirm": True},
+         "name": "garagentor", "payload": "TOGGLE", "confirm": True},
         {"type": "text", "label": "Status Waschmaschine", "topic": "haushalt/waschmaschine/status",
          "map": {"0": "Aus", "1": "Läuft", "2": "Fertig"}},
         {"type": "chart", "label": "Temperatur letzte 24 h", "width": 3, "hours": 24,

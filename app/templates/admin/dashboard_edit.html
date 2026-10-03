@@ -34,9 +34,12 @@ value    Zahl/Wert groß angezeigt
 text     Freitext (z.B. Status), gern mit "map"
 gauge    Rundinstrument: "min", "max", optional "zones": [[0, 18, "#5aa9f0"], [18, 24, "#2e9d5b"]]
 bar      Balken: "min", "max"
-switch   Schalter mit Zustand: "topic" (Zustand), "command_topic", "on_value"/"off_value" (Standard ON/OFF),
+Senden:  Schalter und Buttons senden auf {{ prefix }}NAME. NAME kommt aus "name",
+         sonst aus "label" ("Stehlampe Küche" -> stehlampe_kueche). "command_topic" überschreibt das ganz.
+
+switch   Schalter mit Zustand: "name", "topic" (Zustand, Standard = Sende-Topic), "on_value"/"off_value" (Standard ON/OFF),
          "payload_on"/"payload_off", "text_on"/"text_off", "retain", "qos", "confirm"
-button   Schaltfläche: "command_topic", "payload", "text", optional "topic" für eine Statuszeile, "retain", "qos", "confirm"
+button   Schaltfläche: "name", "payload", "text", optional "topic" für eine Statuszeile, "retain", "qos", "confirm"
 chart    Verlauf aus FHEM-DbLog: "series": [{"source": "GERÄT:READING", "label": "...",
          "map": optional {"on": 1, "off": 0}, "query": optional eigenes SQL}],
          "hours", "height", "unit", "ymin", "ymax", "step" (true = Treppenkurve)

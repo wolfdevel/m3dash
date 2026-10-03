@@ -38,7 +38,8 @@ Alternativ auf dem Docker-Host: `docker compose up -d --build`.
 | `MQTT_HOST`, `MQTT_PORT` | `mqtt3`, `1883` | Broker |
 | `MQTT_USER`, `MQTT_PASSWORD`, `MQTT_TLS` | leer, leer, `false` | Zugang |
 | `MQTT_SUBSCRIBE` | `#` | kommagetrennte Abos, z. B. `zigbee2mqtt/#,tasmota/#` |
-| `MQTT_PUBLISH_ALLOW` | `m3dash/#` | nur auf diese Topics dürfen Schaltflächen senden (wird beim Speichern und beim Senden geprüft) |
+| `MQTT_COMMAND_PREFIX` | `m3dash/stat/` | Schalter und Buttons senden auf Präfix + eigenes Subtopic (`"name"` im Widget, sonst aus der Beschriftung) |
+| `MQTT_PUBLISH_ALLOW` | `m3dash/stat/#` | nur auf diese Topics darf gesendet werden (wird beim Speichern und beim Senden geprüft) |
 | `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASSWORD` | – , `3306`, `fhem` | MariaDB (ein Nur-Lese-Benutzer reicht) |
 | `HISTORY_QUERY` | siehe unten | SQL, das `(Zeitstempel, Wert)` liefert |
 | `HISTORY_MAX_POINTS` | `600` | Diagramme werden auf so viele Punkte gemittelt |

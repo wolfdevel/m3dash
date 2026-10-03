@@ -21,7 +21,7 @@ def load_dashboard(slug=None, dash_id=None):
         abort(403)
     key = (row["id"], row["updated"])
     if key not in _parsed:
-        _parsed[key] = widgets.parse(row["config"])
+        _parsed[key] = widgets.parse(row["config"], current_app.cfg.MQTT_COMMAND_PREFIX)
     return row, _parsed[key]
 
 

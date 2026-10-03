@@ -1,0 +1,131 @@
+/* Absichtlich ohne Flexbox, Grid, CSS-Variablen oder calc(): Kindle 4 / iPad 2 tauglich. */
+* { -webkit-box-sizing: border-box; -moz-box-sizing: border-box; box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body { font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; font-size: 16px; line-height: 1.35;
+       -webkit-text-size-adjust: 100%; }
+a { text-decoration: none; }
+h1 { font-size: 20px; margin: 0; display: inline; }
+h2 { font-size: 18px; margin: 4px 0 0 0; }
+
+#top { padding: 6px 8px; overflow: hidden; }
+#top a { display: inline-block; padding: 6px 8px; margin: 0 2px 2px 0; }
+#top .nav { float: left; }
+#top .tools { float: right; }
+#top a.cur { font-weight: bold; }
+#main { padding: 4px 8px 16px 8px; }
+.flash div { padding: 8px 12px; margin: 0 8px 6px 8px; }
+
+.dashhead { padding: 4px 4px 8px 4px; }
+.stamp { font-size: 12px; margin-left: 10px; }
+#msg { font-size: 13px; margin-left: 10px; }
+
+.grid { font-size: 0; letter-spacing: 0; } /* entfernt Lücken zwischen inline-blocks */
+.cell { display: inline-block; vertical-align: top; padding: 4px; font-size: 16px; }
+.card { padding: 10px 12px; min-height: 100px; overflow: hidden; -webkit-border-radius: 6px; border-radius: 6px; }
+.card.heading { min-height: 0; padding: 4px; background: none !important; border: none !important; }
+.label { font-size: 13px; margin-bottom: 4px; }
+.val { font-size: 30px; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.text .val { font-size: 20px; white-space: normal; }
+.sub { font-size: 13px; margin-top: 6px; }
+.card.stale .val, .card.stale img.gauge { opacity: 0.45; }
+img.gauge { display: block; margin: 0 auto; max-width: 100%; }
+img.chart { display: block; width: 100%; height: auto; }
+.card.chart { padding: 6px; }
+
+.track { height: 12px; margin-top: 8px; overflow: hidden; -webkit-border-radius: 6px; border-radius: 6px; }
+.fill { height: 12px; }
+
+form.act { margin: 0; }
+form.act button { width: 100%; padding: 14px 8px; font-size: 18px; font-weight: bold; cursor: pointer;
+                  -webkit-border-radius: 6px; border-radius: 6px; -webkit-appearance: none;
+                  white-space: normal; word-wrap: break-word; }
+form.act button[disabled] { cursor: default; opacity: 0.5; }
+
+/* Formulare (Login, Verwaltung) */
+.box { max-width: 900px; }
+.narrow { max-width: 360px; margin: 30px auto; }
+label { display: block; margin: 10px 0 4px 0; font-size: 14px; }
+input[type=text], input[type=password], input[type=number], select, textarea {
+  width: 100%; padding: 8px; font-size: 16px; border-width: 1px; border-style: solid; -webkit-appearance: none;
+  -webkit-border-radius: 4px; border-radius: 4px; }
+textarea { font-family: Menlo, Consolas, monospace; font-size: 13px; }
+.btn, input[type=submit] { display: inline-block; padding: 8px 14px; font-size: 15px; margin: 10px 6px 0 0;
+  cursor: pointer; border-width: 1px; border-style: solid; -webkit-border-radius: 4px; border-radius: 4px;
+  -webkit-appearance: none; }
+table.list { border-collapse: collapse; width: 100%; font-size: 14px; }
+table.list th, table.list td { text-align: left; padding: 6px 8px; vertical-align: top; }
+table.list td.mono, .mono { font-family: Menlo, Consolas, monospace; font-size: 12px; word-break: break-all; }
+.adminnav a { display: inline-block; margin: 0 10px 8px 0; }
+.ok { } .bad { font-weight: bold; }
+.hint { font-size: 13px; }
+pre.hint { white-space: pre-wrap; }
+.inline { display: inline; }
+
+@media (max-width: 520px) {
+  .cell { width: 100% !important; }
+  #top .nav, #top .tools { float: none; display: block; }
+  .val { font-size: 26px; }
+}
+
+/* ---------- Hell ---------- */
+body.light { background: #eef0f3; color: #222; }
+.light a { color: #1f5f99; }
+.light #top { background: #fff; border-bottom: 1px solid #d5d9de; }
+.light #top a.cur { color: #000; }
+.light .card { background: #fff; border: 1px solid #dde1e6; }
+.light .label, .light .stamp, .light .sub, .light .hint { color: #6b7480; }
+.light .track { background: #e3e6ea; }
+.light .fill { background: #1f6fb5; }
+.light .warn .fill { background: #c0392b; }
+.light .warn .val { color: #c0392b; }
+.light .flash div { background: #fff6d6; border: 1px solid #e8d48a; }
+.light form.act button { background: #f4f6f8; border: 1px solid #c4cad1; color: #222; }
+.light .switch.on button { background: #1f6fb5; border-color: #1f6fb5; color: #fff; }
+.light .bad { color: #c0392b; }
+.light .ok { color: #2e7d4f; }
+.light input, .light select, .light textarea { background: #fff; border-color: #c4cad1; color: #222; }
+.light .btn, .light input[type=submit] { background: #1f6fb5; border-color: #1f6fb5; color: #fff; }
+.light table.list th { border-bottom: 2px solid #d5d9de; }
+.light table.list td { border-bottom: 1px solid #e3e6ea; background: #fff; }
+
+/* ---------- Dunkel ---------- */
+body.dark { background: #121417; color: #eee; }
+.dark a { color: #7fb8f0; }
+.dark #top { background: #1b1e22; border-bottom: 1px solid #2c3136; }
+.dark #top a.cur { color: #fff; }
+.dark .card { background: #1b1e22; border: 1px solid #2c3136; }
+.dark .label, .dark .stamp, .dark .sub, .dark .hint { color: #9aa3ad; }
+.dark .track { background: #3a3f45; }
+.dark .fill { background: #5aa9f0; }
+.dark .warn .fill { background: #ef7b66; }
+.dark .warn .val { color: #ef7b66; }
+.dark .flash div { background: #3a3320; border: 1px solid #6b5a2a; }
+.dark form.act button { background: #2a2f35; border: 1px solid #444b53; color: #eee; }
+.dark .switch.on button { background: #3d7fc0; border-color: #3d7fc0; color: #fff; }
+.dark .bad { color: #ef7b66; }
+.dark .ok { color: #5ccf8c; }
+.dark input, .dark select, .dark textarea { background: #121417; border-color: #444b53; color: #eee; }
+.dark .btn, .dark input[type=submit] { background: #3d7fc0; border-color: #3d7fc0; color: #fff; }
+.dark table.list th { border-bottom: 2px solid #2c3136; }
+.dark table.list td { border-bottom: 1px solid #2c3136; background: #1b1e22; }
+
+/* ---------- E-Ink (Kindle): nur Schwarz/Weiß, dicke Ränder, größere Schrift ---------- */
+body.eink { background: #fff; color: #000; font-size: 18px; }
+.eink a { color: #000; text-decoration: underline; }
+.eink #top { border-bottom: 2px solid #000; }
+.eink #top a.cur { text-decoration: none; border: 2px solid #000; }
+.eink .card { background: #fff; border: 2px solid #000; -webkit-border-radius: 0; border-radius: 0; }
+.eink .label, .eink .stamp, .eink .sub, .eink .hint { color: #000; }
+.eink .val { font-size: 34px; }
+.eink .track { background: #fff; border: 2px solid #000; height: 16px; }
+.eink .fill { background: #000; height: 12px; }
+.eink .warn .val { text-decoration: underline; }
+.eink .card.stale .val, .eink .card.stale img.gauge { opacity: 1; color: #777; }
+.eink .flash div { border: 2px solid #000; }
+.eink form.act button { font-size: 17px; padding: 12px 4px; background: #fff; border: 3px solid #000; color: #000; }
+.eink .switch.on button { background: #000; color: #fff; }
+.eink .bad { color: #000; text-decoration: underline; }
+.eink input, .eink select, .eink textarea { background: #fff; border: 2px solid #000; color: #000; }
+.eink .btn, .eink input[type=submit] { background: #fff; border: 2px solid #000; color: #000; }
+.eink table.list th { border-bottom: 2px solid #000; }
+.eink table.list td { border-bottom: 1px solid #000; }

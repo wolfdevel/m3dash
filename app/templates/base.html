@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>{% block title %}Smart Home{% endblock %}</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=1">
+{% block head %}{% endblock %}
+</head>
+<body class="{{ theme }}">
+<div id="top">
+  {% if user %}
+  <span class="nav">
+    {% for d in nav %}<a href="{{ url_for('views.dashboard', slug=d.slug) }}"{% if dash is defined and dash.id == d.id %} class="cur"{% endif %}>{{ d.title }}</a>{% endfor %}
+  </span>
+  <span class="tools">
+    {% if user.role == 'admin' %}<a href="{{ url_for('admin.status') }}">Verwaltung</a>{% endif %}
+    <a href="{{ url_for('views.account') }}">{{ user.username }}</a>
+    <a href="{{ url_for('views.logout') }}">Abmelden</a>
+  </span>
+  {% endif %}
+</div>
+{% with msgs = get_flashed_messages() %}{% if msgs %}<div class="flash">{% for m in msgs %}<div>{{ m }}</div>{% endfor %}</div>{% endif %}{% endwith %}
+<div id="main">
+{% block body %}{% endblock %}
+</div>
+{% block scripts %}{% endblock %}
+</body>
+</html>

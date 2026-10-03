@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block title %}Dashboards{% endblock %}
+{% block body %}
+<div class="box">
+{% include "admin/_nav.html" %}
+<h1>Dashboards</h1> <a class="btn" href="{{ url_for('admin.dashboard_edit') }}">Neues Dashboard</a>
+<table class="list" style="margin-top:10px">
+  <tr><th>Titel</th><th>URL</th><th>Sortierung</th><th></th></tr>
+  {% for d in dashboards %}<tr><td>{{ d.title }}</td><td class="mono"><a href="{{ url_for('views.dashboard', slug=d.slug) }}">/d/{{ d.slug }}</a></td><td>{{ d.sort }}</td>
+  <td><a href="{{ url_for('admin.dashboard_edit', did=d.id) }}">Bearbeiten</a></td></tr>
+  {% else %}<tr><td colspan="4">Noch keine Dashboards.</td></tr>{% endfor %}
+</table>
+</div>
+{% endblock %}

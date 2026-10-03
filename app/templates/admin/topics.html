@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block title %}MQTT-Topics{% endblock %}
+{% block body %}
+<div class="box">
+{% include "admin/_nav.html" %}
+<h1>MQTT-Topics</h1>
+<form method="get" style="max-width:420px"><input type="text" name="q" value="{{ q }}" placeholder="Filter, z.B. zigbee2mqtt"><input type="submit" value="Suchen"></form>
+<p class="hint">{{ rows|length }} von {{ total }} Topics. Ein JSON-Feld wählt man im Widget mit <span class="mono">"json_path": "temperature"</span>.</p>
+<table class="list">
+  <tr><th>Topic</th><th>Letzter Wert</th><th>Alter</th></tr>
+  {% for t, p, age in rows %}<tr><td class="mono">{{ t }}</td><td class="mono">{{ p }}</td><td>{{ age }} s</td></tr>{% endfor %}
+</table>
+</div>
+{% endblock %}

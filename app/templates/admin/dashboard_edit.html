@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}Dashboard bearbeiten{% endblock %}
+{% block body %}
+<div class="box">
+{% include "admin/_nav.html" %}
+<h1>{% if d %}Dashboard „{{ d.title }}“{% else %}Neues Dashboard{% endif %}</h1>
+{% if d %} <a href="{{ url_for('views.dashboard', slug=d.slug) }}">Ansehen</a>{% endif %}
+<form method="post">
+  <input type="hidden" name="csrf" value="{{ csrf_token() }}">
+  <div style="max-width:420px">
+    <label for="t">Titel</label><input type="text" id="t" name="title" value="{{ form.title }}">
+    <label for="s">Kurzname für die URL (leer = aus Titel)</label><input type="text" id="s" name="slug" value="{{ form.slug }}" autocapitalize="off">
+    <label for="o">Sortierung</label><input type="number" id="o" name="sort" value="{{ form.sort }}">
+  </div>
+  <label for="c">Konfiguration (JSON)</label>
+  <textarea id="c" name="config" rows="30" spellcheck="false">{{ form.config }}</textarea>
+  <input type="submit" value="Speichern"> <input type="submit" name="view" value="Speichern und ansehen">
+</form>
+{% if d %}
+<form method="post" action="{{ url_for('admin.dashboard_delete', did=d.id) }}" onsubmit="return confirm('Dashboard wirklich löschen?')" style="margin-top:16px">
+  <input type="hidden" name="csrf" value="{{ csrf_token() }}"><input type="submit" value="Dashboard löschen">
+</form>
+{% endif %}
+<h2 style="margin-top:24px">Kurzreferenz</h2>
+<pre class="hint">Dashboard:  "columns" (1–6, Standard 3)  "refresh" (Sekunden, Standard 10; E-Ink ×3)
+            "chart_refresh" (Sekunden, Standard 300)  "widgets": [ ... ]
+
+Alle Widgets:  "type", "label", "width" (Spalten), "topic", "json_path" (z.B. "temperature" oder "a.b.0"),
+               "unit", "decimals", "map" ({"0": "Aus", "1": "An"}), "stale_after" (Sekunden ohne Update -> grau)
+               "warn_above" / "warn_below" (Wert hervorheben)
+
+heading  Zwischenüberschrift
+value    Zahl/Wert groß angezeigt
+text     Freitext (z.B. Status), gern mit "map"
+gauge    Rundinstrument: "min", "max", optional "zones": [[0, 18, "#5aa9f0"], [18, 24, "#2e9d5b"]]
+bar      Balken: "min", "max"
+switch   Schalter mit Zustand: "topic" (Zustand), "command_topic", "on_value"/"off_value" (Standard ON/OFF),
+         "payload_on"/"payload_off", "text_on"/"text_off", "retain", "qos", "confirm"
+button   Schaltfläche: "command_topic", "payload", "text", optional "topic" für eine Statuszeile, "retain", "qos", "confirm"
+chart    Verlauf aus FHEM-DbLog: "series": [{"source": "GERÄT:READING", "label": "...",
+         "map": optional {"on": 1, "off": 0}, "query": optional eigenes SQL}],
+         "hours", "height", "unit", "ymin", "ymax", "step" (true = Treppenkurve)
+
+Widget-Typen: {{ types|join(', ') }}</pre>
+</div>
+{% endblock %}

@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block title %}Benutzer{% endblock %}
+{% block body %}
+<div class="box">
+{% include "admin/_nav.html" %}
+<h1>Benutzer</h1> <a class="btn" href="{{ url_for('admin.user_edit') }}">Neuer Benutzer</a>
+<table class="list" style="margin-top:10px">
+  <tr><th>Name</th><th>Rolle</th><th>Darstellung</th><th></th></tr>
+  {% for u in users %}<tr><td>{{ u.username }}</td><td>{{ u.role }}</td><td>{{ u.theme }}</td>
+  <td><a href="{{ url_for('admin.user_edit', uid=u.id) }}">Bearbeiten</a></td></tr>{% endfor %}
+</table>
+<p class="hint">Rollen: <b>viewer</b> sieht freigegebene Dashboards, <b>operator</b> darf zusätzlich Schaltflächen auslösen, <b>admin</b> sieht alles und verwaltet.</p>
+</div>
+{% endblock %}

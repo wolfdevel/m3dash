@@ -1,0 +1,40 @@
+# Portainer: Stacks -> Add stack -> "Repository" (baut das Image aus diesem Ordner)
+# oder lokal: docker compose up -d --build
+services:
+  dashboard:
+    build: .
+    image: smarthome-dashboard:latest
+    container_name: smarthome-dashboard
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    volumes:
+      - dashboard-data:/data
+    environment:
+      TZ: Europe/Vienna
+      # Erster Admin (nur beim allerersten Start verwendet)
+      ADMIN_USER: admin
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-bitte-aendern}
+      # optional, sonst wird einer erzeugt und in /data abgelegt
+      SECRET_KEY: ${SECRET_KEY:-}
+
+      # MQTT-Broker
+      MQTT_HOST: ${MQTT_HOST:-mqtt3}
+      MQTT_PORT: ${MQTT_PORT:-1883}
+      MQTT_USER: ${MQTT_USER:-}
+      MQTT_PASSWORD: ${MQTT_PASSWORD:-}
+      MQTT_SUBSCRIBE: ${MQTT_SUBSCRIBE:-#}
+      # Schaltflächen dürfen nur hierhin publizieren
+      MQTT_PUBLISH_ALLOW: ${MQTT_PUBLISH_ALLOW:-m3dash/#}
+
+      # MariaDB mit der FHEM-DbLog-Historie (lesender Benutzer genügt)
+      DB_HOST: ${DB_HOST:-}
+      DB_PORT: ${DB_PORT:-3306}
+      DB_NAME: ${DB_NAME:-fhem}
+      DB_USER: ${DB_USER:-dashboard_ro}
+      DB_PASSWORD: ${DB_PASSWORD:-}
+      # Optional: eigenes SQL für die Historie (Standard: FHEM-Tabelle history, siehe README)
+      # HISTORY_QUERY: ...
+
+volumes:
+  dashboard-data:

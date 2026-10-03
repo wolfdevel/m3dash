@@ -24,8 +24,10 @@ services:
       MQTT_USER: ${MQTT_USER:-}
       MQTT_PASSWORD: ${MQTT_PASSWORD:-}
       MQTT_SUBSCRIBE: ${MQTT_SUBSCRIBE:-#}
+      # Schalter senden auf PRÄFIX + Subtopic je Schalter (z.B. m3dash/stat/stehlampe)
+      MQTT_COMMAND_PREFIX: ${MQTT_COMMAND_PREFIX:-m3dash/stat/}
       # Schaltflächen dürfen nur hierhin publizieren
-      MQTT_PUBLISH_ALLOW: ${MQTT_PUBLISH_ALLOW:-m3dash/#}
+      MQTT_PUBLISH_ALLOW: ${MQTT_PUBLISH_ALLOW:-m3dash/stat/#}
 
       # MariaDB mit der FHEM-DbLog-Historie (lesender Benutzer genügt)
       DB_HOST: ${DB_HOST:-}

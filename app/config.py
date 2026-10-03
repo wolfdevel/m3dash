@@ -35,8 +35,11 @@ class Config:
     MQTT_CLIENT_ID = os.environ.get("MQTT_CLIENT_ID") or "smarthome-dashboard-" + os.urandom(3).hex()
     # Kommagetrennte Liste von Abos, z.B. "zigbee2mqtt/#,tasmota/#"
     MQTT_SUBSCRIBE = [t.strip() for t in os.environ.get("MQTT_SUBSCRIBE", "#").split(",") if t.strip()]
+    # Schalter/Buttons senden auf PRÄFIX + Subtopic je Schalter, z.B. m3dash/stat/stehlampe
+    MQTT_COMMAND_PREFIX = os.environ.get("MQTT_COMMAND_PREFIX", "m3dash/stat/").rstrip("/") + "/"
     # Nur auf diese Topics darf das Dashboard publizieren (MQTT-Wildcards erlaubt)
-    MQTT_PUBLISH_ALLOW = [t.strip() for t in os.environ.get("MQTT_PUBLISH_ALLOW", "m3dash/#").split(",") if t.strip()]
+    MQTT_PUBLISH_ALLOW = [t.strip() for t in os.environ.get("MQTT_PUBLISH_ALLOW", MQTT_COMMAND_PREFIX + "#").split(",")
+                          if t.strip()]
     MQTT_MAX_TOPICS = _int("MQTT_MAX_TOPICS", 10000)
 
     # MariaDB (Historie, nur lesend)

@@ -79,6 +79,10 @@ Unter *MQTT-Topics* sieht man alle Topics mit ihrem letzten Wert, um Topics und 
 
 Widget-Typen: `heading`, `value`, `text`, `gauge`, `bar`, `switch`, `button`, `chart`.
 
+Diagramme: Jede Serie kann ihren eigenen Stil haben (`"style"`: `line`, `step`, `area`, `bar`, `points`) und mit
+`"axis": "right"` auf eine zweite y-Achse rechts gelegt werden. Grenzen und Einheit: `ymin`/`ymax`/`unit` (links),
+`y2min`/`y2max`/`unit2` (rechts).
+
 ## Lokale Entwicklung
 
 ```sh

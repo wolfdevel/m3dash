@@ -18,5 +18,5 @@ USER dashboard
 VOLUME /data
 EXPOSE 8080
 HEALTHCHECK --interval=30s --timeout=5s --start-period=20s \
-  CMD python -c "import urllib.request,sys; urllib.request.urlopen('http://127.0.0.1:8080/login', timeout=4)" || exit 1
+  CMD python -c "import os, urllib.request; urllib.request.urlopen('http://127.0.0.1:%s/login' % os.environ.get('PORT', '8080'), timeout=4)" || exit 1
 CMD ["python", "wsgi.py"]

@@ -7,11 +7,13 @@ services:
     container_name: smarthome-dashboard
     restart: unless-stopped
     ports:
-      - "8080:8080"
+      # DASHBOARD_PORT: Port, unter dem das Dashboard erreichbar ist (Standard 8080)
+      - "${DASHBOARD_PORT:-8080}:${DASHBOARD_PORT:-8080}"
     volumes:
       - dashboard-data:/data
     environment:
       TZ: Europe/Vienna
+      PORT: ${DASHBOARD_PORT:-8080}
       # Erster Admin (nur beim allerersten Start verwendet)
       ADMIN_USER: admin
       ADMIN_PASSWORD: ${ADMIN_PASSWORD:-bitte-aendern}

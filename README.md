@@ -24,7 +24,7 @@ Darstellung je Benutzer: Hell, Dunkel, E-Ink oder Automatisch (Kindle → E-Ink)
 2. Portainer → *Stacks* → *Add stack* → *Repository*, Repository-URL angeben, Compose-Pfad `docker-compose.yml`.
 3. Unter *Environment variables* mindestens setzen: `ADMIN_PASSWORD`, `MQTT_HOST`, ggf. `MQTT_USER`/`MQTT_PASSWORD`,
    `DB_HOST`, `DB_NAME`, `DB_USER`, `DB_PASSWORD`, `HISTORY_QUERY`.
-4. *Deploy*. Danach `http://<docker-host>:8080` öffnen und als `admin` anmelden.
+4. *Deploy*. Danach `http://<docker-host>:8080` öffnen (anderer Port: `DASHBOARD_PORT` setzen) und als `admin` anmelden.
 
 Alternativ auf dem Docker-Host: `docker compose up -d --build`.
 
@@ -32,6 +32,7 @@ Alternativ auf dem Docker-Host: `docker compose up -d --build`.
 
 | Variable | Standard | Bedeutung |
 |---|---|---|
+| `DASHBOARD_PORT` | `8080` | Port, unter dem das Dashboard erreichbar ist (im Container: `PORT`) |
 | `ADMIN_USER` / `ADMIN_PASSWORD` | `admin` / zufällig (steht im Log) | erster Admin, nur beim ersten Start |
 | `SECRET_KEY` | wird erzeugt und in `/data` gespeichert | signiert die Login-Cookies |
 | `SESSION_DAYS` | `365` | wie lange „Angemeldet bleiben“ hält |

@@ -41,8 +41,11 @@ switch   Schalter mit Zustand: "name", "topic" (Zustand, Standard = Sende-Topic)
          "payload_on"/"payload_off", "text_on"/"text_off", "retain", "qos", "confirm"
 button   Schaltfläche: "name", "payload", "text", optional "topic" für eine Statuszeile, "retain", "qos", "confirm"
 chart    Verlauf aus FHEM-DbLog: "series": [{"source": "GERÄT:READING", "label": "...",
+         "style": "line" | "step" | "area" | "bar" | "points", "axis": "left" | "right", "color": "#d9822b",
          "map": optional {"on": 1, "off": 0}, "query": optional eigenes SQL}],
-         "hours", "height", "unit", "ymin", "ymax", "step" (true = Treppenkurve)
+         "hours", "height", "unit", "ymin", "ymax"  (linke Achse),
+         "unit2", "y2min", "y2max"  (rechte Achse, sobald eine Serie "axis": "right" hat),
+         "step": true = alle Serien als Treppe (Kurzform)
 
 Widget-Typen: {{ types|join(', ') }}</pre>
 </div>

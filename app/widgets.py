@@ -9,6 +9,7 @@ import time
 
 from paho.mqtt.client import topic_matches_sub
 
+CHART_STYLES = ("line", "step", "area", "bar", "points")
 TYPES = ("heading", "value", "text", "gauge", "bar", "switch", "button", "chart")
 
 DEFAULTS = {
@@ -112,6 +113,11 @@ def normalize(config, publish_allow=None, command_prefix="m3dash/stat/"):
             for s in series:
                 if not isinstance(s, dict) or not s.get("source"):
                     raise ValueError("Widget %d (chart): jede Serie braucht 'source'" % (i + 1))
+                if s.get("style", "line") not in CHART_STYLES:
+                    raise ValueError("Widget %d (chart): unbekannter 'style' '%s' (erlaubt: %s)"
+                                     % (i + 1, s.get("style"), ", ".join(CHART_STYLES)))
+                if s.get("axis", "left") not in ("left", "right"):
+                    raise ValueError("Widget %d (chart): 'axis' muss 'left' oder 'right' sein" % (i + 1))
             n["series"] = series
             n["hours"] = _num(n.get("hours", 24), "hours", i)
             n["height"] = int(n.get("height", 220))

@@ -116,52 +116,93 @@ def chart(series_data, w, theme, width=600, height=220, cache_key=None, ttl=60):
     return _chart(series_data, w, theme, width, height)
 
 
+STYLES = ("line", "step", "area", "bar", "points")
+
+
+def _draw(ax, style, xs, ys, kw):
+    if style == "step":
+        ax.step(xs, ys, where="post", **kw)
+    elif style == "area":
+        ax.plot(xs, ys, **kw)
+        ax.fill_between(xs, ys, step=None, color=kw["color"], alpha=0.25, linewidth=0)
+    elif style == "bar":
+        span = mdates.date2num(xs[-1]) - mdates.date2num(xs[0]) if len(xs) > 1 else 1 / 24.0
+        bw = 0.8 * span / max(1, len(xs))  # Breite in Tagen
+        ax.bar(xs, ys, width=bw, color=kw["color"], label=kw["label"], align="center", linewidth=0)
+    elif style == "points":
+        ax.plot(xs, ys, marker="o", markersize=3, linestyle="none", color=kw["color"], label=kw["label"])
+    else:
+        ax.plot(xs, ys, **kw)
+
+
+def _style_axis(ax, c, theme, side):
+    for spine in ("top", "right" if side == "left" else "left"):
+        ax.spines[spine].set_visible(False)
+    for spine in (side, "bottom"):
+        ax.spines[spine].set_color(c["muted"])
+    ax.tick_params(colors=c["muted"], labelsize=10 if theme == "eink" else 8)
+
+
+def _limits(ax, lo, hi):
+    if lo is not None:
+        ax.set_ylim(bottom=float(lo))
+    if hi is not None:
+        ax.set_ylim(top=float(hi))
+
+
 def _chart(series_data, w, theme, width, height):
+    """series_data: [(label, punkte, fehler, serien_config), ...]"""
     c = THEMES[theme]
+    default_style = "step" if w.get("step") else w.get("style", "line")
     with _lock:
         fig = plt.figure(figsize=(width / 100.0, height / 100.0), dpi=100)
         ax = fig.add_subplot(111)
         fig.patch.set_facecolor(c["bg"])
         ax.set_facecolor(c["bg"])
-        for spine in ("top", "right"):
-            ax.spines[spine].set_visible(False)
-        for spine in ("left", "bottom"):
-            ax.spines[spine].set_color(c["muted"])
-        ax.tick_params(colors=c["muted"], labelsize=10 if theme == "eink" else 8)
+        _style_axis(ax, c, theme, "left")
         ax.grid(True, color=c["grid"], linewidth=0.6)
+        ax2 = None
+        if any((s or {}).get("axis") == "right" for _, _, _, s in series_data):
+            ax2 = ax.twinx()
+            _style_axis(ax2, c, theme, "right")
         any_data = False
-        for i, (label, pts, err) in enumerate(series_data):
+        for i, (label, pts, err, s) in enumerate(series_data):
             if not pts:
                 continue
             any_data = True
-            xs = [p[0] for p in pts]
-            ys = [p[1] for p in pts]
-            kw = dict(color=c["series"][i % len(c["series"])], lw=1.6 if theme != "eink" else 2.0, label=label)
+            s = s or {}
+            target = ax2 if s.get("axis") == "right" and ax2 is not None else ax
+            color = s.get("color") if theme != "eink" and s.get("color") else c["series"][i % len(c["series"])]
+            kw = dict(color=color, lw=1.6 if theme != "eink" else 2.0, label=label)
             if theme == "eink":
                 kw["linestyle"] = LINESTYLES[i % len(LINESTYLES)]
-            if w.get("step"):
-                ax.step(xs, ys, where="post", **kw)
-            else:
-                ax.plot(xs, ys, **kw)
+            _draw(target, s.get("style", default_style), [p[0] for p in pts], [p[1] for p in pts], kw)
         if not any_data:
-            msg = "; ".join(e for _, _, e in series_data if e) or "Keine Daten im Zeitraum"
+            msg = "; ".join(e for _, _, e, _ in series_data if e) or "Keine Daten im Zeitraum"
             ax.text(0.5, 0.5, msg[:120], ha="center", va="center", transform=ax.transAxes,
                     color=c["muted"], fontsize=9, wrap=True)
             ax.set_xticks([])
             ax.set_yticks([])
+            if ax2 is not None:
+                ax2.set_yticks([])
         else:
             hours = float(w.get("hours", 24))
             fmt = "%H:%M" if hours <= 36 else "%d.%m."
             ax.xaxis.set_major_formatter(mdates.DateFormatter(fmt))
             ax.xaxis.set_major_locator(mdates.AutoDateLocator(maxticks=max(3, width // 90)))
-            if "ymin" in w:
-                ax.set_ylim(bottom=float(w["ymin"]))
-            if "ymax" in w:
-                ax.set_ylim(top=float(w["ymax"]))
+            _limits(ax, w.get("ymin"), w.get("ymax"))
             if w.get("unit"):
                 ax.set_ylabel(w["unit"], color=c["muted"], fontsize=8)
-            if len(series_data) > 1:
-                leg = ax.legend(loc="lower left", bbox_to_anchor=(0, 1.0), ncol=min(4, len(series_data)),
+            if ax2 is not None:
+                _limits(ax2, w.get("y2min"), w.get("y2max"))
+                if w.get("unit2"):
+                    ax2.set_ylabel(w["unit2"], color=c["muted"], fontsize=8)
+            handles, labels = ax.get_legend_handles_labels()
+            if ax2 is not None:
+                h2, l2 = ax2.get_legend_handles_labels()
+                handles, labels = handles + h2, labels + l2
+            if len(handles) > 1:
+                leg = ax.legend(handles, labels, loc="lower left", bbox_to_anchor=(0, 1.0), ncol=min(4, len(handles)),
                                 fontsize=10 if theme == "eink" else 8, frameon=False, borderaxespad=0.2)
                 for t in leg.get_texts():
                     t.set_color(c["fg"])

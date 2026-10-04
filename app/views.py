@@ -201,10 +201,10 @@ def chart_png(dash_id, idx):
         for s in w["series"]:
             try:
                 pts = hist.series(s["source"], s.get("hours", w["hours"]), s.get("query"), s.get("map"))
-                data.append((s.get("label", s["source"]), pts, ""))
+                data.append((s.get("label", s["source"]), pts, "", s))
             except Exception as e:
                 current_app.logger.warning("Historie für %s: %s", s["source"], e)
-                data.append((s.get("label", s["source"]), [], "Historie nicht verfügbar"))
+                data.append((s.get("label", s["source"]), [], "Historie nicht verfügbar", s))
         return data
 
     key = (dash_id, row["updated"], idx)

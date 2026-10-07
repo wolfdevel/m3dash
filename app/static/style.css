@@ -30,10 +30,10 @@ h2 { font-size: 18px; margin: 4px 0 0 0; }
 .card.stale .val, .card.stale img.gauge { opacity: 0.45; }
 img.gauge { display: block; margin: 0 auto; max-width: 100%; }
 img.chart { display: block; width: 100%; height: auto; }
-.card.chart { padding: 6px; }
+.card.chart { padding: 6px !important; } /* dash.js rechnet mit genau diesem Abstand */
 
 .track { height: 12px; margin-top: 8px; overflow: hidden; -webkit-border-radius: 6px; border-radius: 6px; }
-.fill { height: 12px; }
+.fill { height: 100%; }
 
 form.act { margin: 0; }
 form.act button { width: 100%; padding: 14px 8px; font-size: 18px; font-weight: bold; cursor: pointer;
@@ -61,8 +61,15 @@ table.list td.mono, .mono { font-family: Menlo, Consolas, monospace; font-size: 
 pre.hint { white-space: pre-wrap; }
 .inline { display: inline; }
 
+img.icon { vertical-align: middle; border: 0; }
+img.icon.lead { float: left; margin-right: 8px; }
+.card.noframe { border: none !important; background: none !important; }
+.al-left .val, .al-left .label { text-align: left; }
+.al-center .val, .al-center .label { text-align: center; }
+.al-right .val, .al-right .label { text-align: right; }
+
 @media (max-width: 520px) {
-  .cell { width: 100% !important; }
+  .stack .cell { width: 100% !important; }
   #top .nav, #top .tools { float: none; display: block; }
   .val { font-size: 26px; }
 }
@@ -118,7 +125,7 @@ body.eink { background: #fff; color: #000; font-size: 18px; }
 .eink .label, .eink .stamp, .eink .sub, .eink .hint { color: #000; }
 .eink .val { font-size: 34px; }
 .eink .track { background: #fff; border: 2px solid #000; height: 16px; }
-.eink .fill { background: #000; height: 12px; }
+.eink .fill { background: #000; }
 .eink .warn .val { text-decoration: underline; }
 .eink .card.stale .val, .eink .card.stale img.gauge { opacity: 1; color: #777; }
 .eink .flash div { border: 2px solid #000; }
@@ -129,3 +136,46 @@ body.eink { background: #fff; color: #000; font-size: 18px; }
 .eink .btn, .eink input[type=submit] { background: #fff; border: 2px solid #000; color: #000; }
 .eink table.list th { border-bottom: 2px solid #000; }
 .eink table.list td { border-bottom: 1px solid #000; }
+
+/* E-Ink: Schalter mit Symbol zeigen "an" grau hinterlegt, sonst wäre ein schwarzes Symbol unsichtbar */
+.eink .switch.on.hasicon button { background: #9a9a9a; color: #000; }
+.light .switch.on.hasicon button { background: #c9dcef; border-color: #1f6fb5; color: #222; }
+
+/* ---------- Größenstufen ("size" je Dashboard oder Widget); m = Standard oben ---------- */
+.card.sz-xs { padding: 2px 4px; min-height: 0; }
+.card.sz-xs .label { font-size: 11px; margin-bottom: 1px; }
+.card.sz-xs .val { font-size: 16px; }
+.card.sz-xs.text .val { font-size: 13px; }
+.card.sz-xs h2 { font-size: 14px; }
+.card.sz-xs form.act button { padding: 3px 2px; font-size: 12px; }
+.card.sz-xs .track { height: 8px; margin-top: 3px; }
+.card.sz-xs .sub { font-size: 11px; margin-top: 2px; }
+.card.sz-xs img.icon.lead { margin-right: 4px; }
+
+.card.sz-s { padding: 5px 7px; min-height: 0; }
+.card.sz-s .label { font-size: 12px; margin-bottom: 2px; }
+.card.sz-s .val { font-size: 21px; }
+.card.sz-s.text .val { font-size: 15px; }
+.card.sz-s h2 { font-size: 16px; }
+.card.sz-s form.act button { padding: 7px 4px; font-size: 15px; }
+.card.sz-s .track { height: 10px; margin-top: 5px; }
+.card.sz-s .sub { font-size: 12px; margin-top: 3px; }
+.card.sz-s img.icon.lead { margin-right: 6px; }
+
+.card.sz-l { padding: 12px 14px; min-height: 130px; }
+.card.sz-l .label { font-size: 15px; }
+.card.sz-l .val { font-size: 42px; }
+.card.sz-l.text .val { font-size: 26px; }
+.card.sz-l h2 { font-size: 22px; }
+.card.sz-l form.act button { padding: 22px 8px; font-size: 24px; }
+.card.sz-l .track { height: 18px; }
+
+.card.sz-xl { padding: 14px 16px; min-height: 160px; }
+.card.sz-xl .label { font-size: 17px; }
+.card.sz-xl .val { font-size: 56px; }
+.card.sz-xl.text .val { font-size: 32px; }
+.card.sz-xl h2 { font-size: 26px; }
+.card.sz-xl form.act button { padding: 30px 10px; font-size: 30px; }
+.card.sz-xl .track { height: 24px; }
+
+.card.hasicon form.act button { padding: 4px; }

@@ -44,17 +44,17 @@
       "label": "Stehlampe",
       "topic": "zigbee2mqtt/stehlampe",
       "json_path": "state",
-      "command_topic": "zigbee2mqtt/stehlampe/set",
       "payload_on": "{\"state\":\"ON\"}",
-      "payload_off": "{\"state\":\"OFF\"}"
+      "payload_off": "{\"state\":\"OFF\"}",
+      "name": "stehlampe"
     },
     {
       "type": "button",
       "label": "Garagentor",
       "text": "Öffnen/Schließen",
-      "command_topic": "garage/tor/set",
       "payload": "TOGGLE",
-      "confirm": true
+      "confirm": true,
+      "name": "garagentor"
     },
     {
       "type": "text",

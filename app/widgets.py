@@ -11,6 +11,12 @@ from paho.mqtt.client import topic_matches_sub
 
 CHART_STYLES = ("line", "step", "area", "bar", "points")
 TYPES = ("heading", "value", "text", "gauge", "bar", "switch", "button", "chart")
+SIZES = ("xs", "s", "m", "l", "xl")
+# Standard-Symbolgröße (px) je Größenstufe
+ICON_SIZES = {"xs": 24, "s": 36, "m": 48, "l": 64, "xl": 80}
+# Skalierung der Gauge-Bilder je Größenstufe
+GAUGE_SCALE = {"xs": 0.5, "s": 0.7, "m": 1.0, "l": 1.3, "xl": 1.6}
+LEGEND = ("top", "bottom", "inside", "none")
 
 DEFAULTS = {
     "width": 1,
@@ -52,6 +58,28 @@ def _command_topic(n, i, prefix):
     return prefix + name
 
 
+def _icon_url(v, base, wi):
+    """Symbol: volle URL (http/https), absoluter Pfad oder Dateiname unter "icon_base" (Standard /icons/)."""
+    if not v:
+        return ""
+    v = str(v).strip()
+    if re.match(r"^https?://", v, re.I) or v.startswith("/"):
+        return v
+    if ":" in v or ".." in v:
+        raise ValueError("Widget %d: ungültiges Symbol '%s'" % (wi + 1, v))
+    return base + v
+
+
+def _int(v, name, wi, lo, hi):
+    try:
+        n = int(float(v))
+    except (TypeError, ValueError):
+        raise ValueError("Widget %d: '%s' muss eine Zahl sein" % (wi + 1, name))
+    if not lo <= n <= hi:
+        raise ValueError("Widget %d: '%s' muss zwischen %d und %d liegen" % (wi + 1, name, lo, hi))
+    return n
+
+
 def normalize(config, publish_allow=None, command_prefix="m3dash/stat/"):
     """Prüft eine Dashboard-Konfiguration (dict) und ergänzt Standardwerte."""
     if not isinstance(config, dict):
@@ -60,10 +88,18 @@ def normalize(config, publish_allow=None, command_prefix="m3dash/stat/"):
         "columns": int(config.get("columns", 3)),
         "refresh": max(2, int(config.get("refresh", 10))),
         "chart_refresh": max(30, int(config.get("chart_refresh", 300))),
+        "size": str(config.get("size", "m")),
+        "frame": bool(config.get("frame", True)),
+        "mobile_stack": bool(config.get("mobile_stack", True)),
+        "icon_base": str(config.get("icon_base", "/icons/")),
         "widgets": [],
     }
-    if not 1 <= out["columns"] <= 6:
-        raise ValueError("'columns' muss zwischen 1 und 6 liegen")
+    if not 1 <= out["columns"] <= 12:
+        raise ValueError("'columns' muss zwischen 1 und 12 liegen")
+    if out["size"] not in SIZES:
+        raise ValueError("'size' muss einer der Werte %s sein" % ", ".join(SIZES))
+    if out["icon_base"] and not out["icon_base"].endswith("/"):
+        out["icon_base"] += "/"
     widgets = config.get("widgets", [])
     if not isinstance(widgets, list):
         raise ValueError("'widgets' muss eine Liste sein")
@@ -77,6 +113,24 @@ def normalize(config, publish_allow=None, command_prefix="m3dash/stat/"):
         n.update(w)
         n["width"] = max(1, min(out["columns"], int(n["width"])))
         n["label"] = str(n.get("label", ""))
+        n["size"] = str(n.get("size", out["size"]))
+        if n["size"] not in SIZES:
+            raise ValueError("Widget %d: 'size' muss einer der Werte %s sein" % (i + 1, ", ".join(SIZES)))
+        n["frame"] = bool(n.get("frame", out["frame"]))
+        if n.get("font_size") is not None:
+            n["font_size"] = _int(n["font_size"], "font_size", i, 6, 200)
+        if t != "chart" and n.get("height") is not None:
+            n["height"] = _int(n["height"], "height", i, 0, 2000)
+        n["align"] = str(n.get("align", ""))
+        if n["align"] not in ("", "left", "center", "right"):
+            raise ValueError("Widget %d: 'align' muss left, center oder right sein" % (i + 1))
+        for k in ("icon", "icon_on", "icon_off"):
+            n[k] = _icon_url(n.get(k), out["icon_base"], i)
+        if t == "switch" and (n["icon"] or n["icon_on"] or n["icon_off"]):
+            n["icon"] = n["icon"] or n["icon_off"] or n["icon_on"]
+            n["icon_on"] = n["icon_on"] or n["icon"]
+            n["icon_off"] = n["icon_off"] or n["icon"]
+        n["icon_size"] = _int(n.get("icon_size", ICON_SIZES[n["size"]]), "icon_size", i, 8, 400)
         if t in ("value", "text", "gauge", "bar") and not n.get("topic"):
             raise ValueError("Widget %d (%s): 'topic' fehlt" % (i + 1, t))
         if t in ("gauge", "bar"):
@@ -94,9 +148,10 @@ def normalize(config, publish_allow=None, command_prefix="m3dash/stat/"):
             n.setdefault("payload_off", n["off_value"])
             n.setdefault("text_on", "AN")
             n.setdefault("text_off", "AUS")
+            n["show_text"] = bool(n.get("show_text", not (n["icon"] or n["icon_on"] or n["icon_off"])))
         if t == "button":
             n.setdefault("payload", "")
-            n.setdefault("text", n["label"] or "Ausführen")
+            n.setdefault("text", "" if n["icon"] else (n["label"] or "Ausführen"))
         if t in ("switch", "button"):
             if publish_allow is not None and not publish_allowed(n["command_topic"], publish_allow):
                 raise ValueError("Widget %d: Senden auf '%s' ist nicht erlaubt (erlaubt: %s)"
@@ -120,7 +175,9 @@ def normalize(config, publish_allow=None, command_prefix="m3dash/stat/"):
                     raise ValueError("Widget %d (chart): 'axis' muss 'left' oder 'right' sein" % (i + 1))
             n["series"] = series
             n["hours"] = _num(n.get("hours", 24), "hours", i)
-            n["height"] = int(n.get("height", 220))
+            n["height"] = _int(n.get("height", 220), "height", i, 80, 1200)
+            if n.get("legend", "top") not in LEGEND:
+                raise ValueError("Widget %d (chart): 'legend' muss einer der Werte %s sein" % (i + 1, ", ".join(LEGEND)))
         out["widgets"].append(n)
     return out
 
@@ -194,13 +251,14 @@ def state(mqtt, w, idx, dash_id, theme="light"):
     cls = "stale" if stale else ""
     mapping = w.get("map") or {}
     if val is None:
-        return {"t": "–", "c": "stale", "p": 0, "i": ""}
+        return {"t": "–", "c": "stale", "p": 0, "i": w.get("icon_off", "") if t == "switch" else ""}
 
     if t == "switch":
         on = val == str(w["on_value"])
         off = val == str(w["off_value"])
         text = w["text_on"] if on else (w["text_off"] if off else mapping.get(val, val))
-        return {"t": text, "c": ("on" if on else "off") + (" stale" if stale else ""), "p": 0, "i": ""}
+        icon = (w["icon_on"] if on else w["icon_off"]) if w.get("icon_on") or w.get("icon_off") else ""
+        return {"t": text, "c": ("on" if on else "off") + (" stale" if stale else ""), "p": 0, "i": icon}
 
     if val in mapping:
         return {"t": str(mapping[val]), "c": cls, "p": 0, "i": ""}
@@ -231,7 +289,7 @@ def state(mqtt, w, idx, dash_id, theme="light"):
     # gauge: Bild-URL mit gerundetem Wert, damit der Browser-Cache greift
     q = round(num, int(w["decimals"]))
     return {"t": text, "c": cls + _level(w, num), "p": round(pct, 1),
-            "i": "/img/gauge/%d/%d.png?th=%s&v=%s" % (dash_id, idx, theme, q)}
+            "i": "/img/gauge/%d/%d.png?th=%s&sz=%s&v=%s" % (dash_id, idx, theme, w["size"], q)}
 
 
 def _level(w, num):

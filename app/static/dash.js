@@ -102,7 +102,7 @@
     var imgs = document.getElementsByTagName("img"), j, src, w;
     for (j = 0; j < imgs.length; j++) {
       src = imgs[j].getAttribute("data-src");
-      w = imgs[j].parentNode.offsetWidth - 12;
+      w = imgs[j].parentNode.clientWidth - 12; /* Innenbreite: Karte ohne Rand, minus 2×6px Abstand */
       if (src && w > 150) {
         src = src.replace(/w=\d+/, "w=" + w);
         imgs[j].setAttribute("data-src", src);

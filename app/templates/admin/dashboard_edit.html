@@ -22,12 +22,18 @@
 </form>
 {% endif %}
 <h2 style="margin-top:24px">Kurzreferenz</h2>
-<pre class="hint">Dashboard:  "columns" (1–6, Standard 3)  "refresh" (Sekunden, Standard 10; E-Ink ×3)
+<pre class="hint">Dashboard:  "columns" (1–12, Standard 3)  "refresh" (Sekunden, Standard 10; E-Ink ×3)
             "chart_refresh" (Sekunden, Standard 300)  "widgets": [ ... ]
+            "size": "xs" | "s" | "m" | "l" | "xl"  (Standardgröße aller Widgets, Standard m)
+            "frame": false  (Widgets ohne Rahmen/Hintergrund)   "icon_base" (Standard /icons/)
+            "mobile_stack": false  (auf schmalen Handys nicht untereinander stapeln)
 
 Alle Widgets:  "type", "label", "width" (Spalten), "topic", "json_path" (z.B. "temperature" oder "a.b.0"),
                "unit", "decimals", "map" ({"0": "Aus", "1": "An"}), "stale_after" (Sekunden ohne Update -> grau)
                "warn_above" / "warn_below" (Wert hervorheben)
+Darstellung:   "size" (xs–xl, überschreibt das Dashboard), "font_size" (px für Wert/Button-Text),
+               "height" (Mindesthöhe der Karte in px), "frame": false, "align": "left" | "center" | "right",
+               "icon" (Dateiname aus Verwaltung > Symbole oder URL), "icon_size" (px)
 
 heading  Zwischenüberschrift
 value    Zahl/Wert groß angezeigt
@@ -38,14 +44,17 @@ Senden:  Schalter und Buttons senden auf {{ prefix }}NAME. NAME kommt aus "name"
          sonst aus "label" ("Stehlampe Küche" -> stehlampe_kueche). "command_topic" überschreibt das ganz.
 
 switch   Schalter mit Zustand: "name", "topic" (Zustand, Standard = Sende-Topic), "on_value"/"off_value" (Standard ON/OFF),
-         "payload_on"/"payload_off", "text_on"/"text_off", "retain", "qos", "confirm"
-button   Schaltfläche: "name", "payload", "text", optional "topic" für eine Statuszeile, "retain", "qos", "confirm"
+         "payload_on"/"payload_off", "text_on"/"text_off", "retain", "qos", "confirm",
+         "icon_on"/"icon_off" (Symbol je Zustand), "show_text" (Text unter dem Symbol, Standard nur ohne Symbol)
+button   Schaltfläche: "name", "payload", "text" (leer = nur Symbol), optional "topic" für eine Statuszeile,
+         "retain", "qos", "confirm"
 chart    Verlauf aus FHEM-DbLog: "series": [{"source": "GERÄT:READING", "label": "...",
          "style": "line" | "step" | "area" | "bar" | "points", "axis": "left" | "right", "color": "#d9822b",
          "map": optional {"on": 1, "off": 0}, "query": optional eigenes SQL}],
          "hours", "height", "unit", "ymin", "ymax"  (linke Achse),
          "unit2", "y2min", "y2max"  (rechte Achse, sobald eine Serie "axis": "right" hat),
-         "step": true = alle Serien als Treppe (Kurzform)
+         "step": true = alle Serien als Treppe (Kurzform),
+         "legend": "top" | "bottom" | "inside" | "none",  "font_size" (Schrift im Diagramm, px)
 
 Widget-Typen: {{ types|join(', ') }}</pre>
 </div>

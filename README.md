@@ -83,6 +83,32 @@ Diagramme: Jede Serie kann ihren eigenen Stil haben (`"style"`: `line`, `step`, 
 `"axis": "right"` auf eine zweite y-Achse rechts gelegt werden. Grenzen und Einheit: `ymin`/`ymax`/`unit` (links),
 `y2min`/`y2max`/`unit2` (rechts).
 
+Diagramme auf dem Kindle: Die Legende bricht bei langen Namen automatisch in mehrere Zeilen um
+(`"legend"`: `top`, `bottom`, `inside` oder `none`), Flächen werden im E-Ink-Modus nur hellgrau hinterlegt, und
+`"font_size"` stellt die Schrift im Diagramm ein. Das Bild wird in der tatsächlichen Breite der Karte gerendert.
+
+### Größen und Symbole
+
+Für kompakte Ansichten (z.B. Kindle) lässt sich die Darstellung je Dashboard und je Widget einstellen:
+
+| Option | Wo | Wirkung |
+|---|---|---|
+| `"size"` | Dashboard oder Widget | `xs`, `s`, `m` (Standard), `l`, `xl`: Schrift, Abstände, Buttons, Balken, Gauge-Größe |
+| `"font_size"` | Widget | Schriftgröße von Wert bzw. Button-Text in px |
+| `"height"` | Widget | Mindesthöhe der Karte in px (bei Diagrammen die Bildhöhe) |
+| `"frame": false` | Dashboard oder Widget | ohne Rahmen und Hintergrund |
+| `"align"` | Widget | `left`, `center`, `right` |
+| `"icon"`, `"icon_size"` | Widget | Symbol vor dem Wert bzw. im Button; bei Schaltern auch `"icon_on"`/`"icon_off"` |
+| `"columns"` | Dashboard | bis zu 12 Spalten für feine Raster |
+| `"mobile_stack": false` | Dashboard | auf schmalen Handys nicht alles untereinander stapeln |
+
+Symbole lädt man unter *Verwaltung → Symbole* hoch (landen im Volume unter `/data/icons`) und verwendet sie mit
+`"icon": "lampe.png"`. Eine volle URL geht auch, etwa ein Symbol aus FHEM. Für den Kindle am besten schwarze
+PNG/GIF-Symbole auf transparentem Hintergrund. Schalter mit Symbol zeigen „an“ grau hinterlegt.
+Ein kompaktes Beispiel im Stil eines FHEM-Kindle-Dashboards steht in `examples/kindle.json`.
+
+![Kompaktes Dashboard auf dem Kindle](docs/screenshot-kindle-kompakt.png)
+
 ## Lokale Entwicklung
 
 ```sh

@@ -36,6 +36,7 @@ def create_app(cfg=Config, start_mqtt=True):
         SESSION_COOKIE_HTTPONLY=True,
         SESSION_COOKIE_SAMESITE="Lax",
         JSON_AS_ASCII=False,
+        MAX_CONTENT_LENGTH=8 * 1024 * 1024,  # Symbol-Upload
     )
     app.json.ensure_ascii = False
     app.cfg = cfg

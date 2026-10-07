@@ -1,8 +1,10 @@
 import json
+import os
 import re
 import time
 
 from flask import Blueprint, abort, current_app, flash, redirect, render_template, request, url_for
+from werkzeug.utils import secure_filename
 
 from . import widgets
 from .auth import admin_required, check_csrf, current_user
@@ -176,3 +178,43 @@ def topics():
         if len(rows) >= 500:
             break
     return render_template("admin/topics.html", rows=rows, q=q, total=len(current_app.mqtt.values))
+
+
+# --- Symbole ---------------------------------------------------------------
+
+ICON_EXT = (".png", ".gif", ".jpg", ".jpeg", ".svg")
+
+
+def _icon_dir():
+    path = os.path.join(current_app.cfg.DATA_DIR, "icons")
+    os.makedirs(path, exist_ok=True)
+    return path
+
+
+@bp.route("/icons", methods=["GET", "POST"])
+@admin_required
+def icons():
+    folder = _icon_dir()
+    if request.method == "POST":
+        check_csrf()
+        if request.form.get("delete"):
+            name = secure_filename(request.form["delete"])
+            if name and os.path.isfile(os.path.join(folder, name)):
+                os.remove(os.path.join(folder, name))
+                flash("Symbol %s gelöscht." % name)
+            return redirect(url_for("admin.icons"))
+        saved = []
+        for f in request.files.getlist("files"):
+            name = secure_filename(f.filename or "").lower()
+            if not name:
+                continue
+            if not name.endswith(ICON_EXT):
+                flash("%s übersprungen: nur %s erlaubt." % (name, ", ".join(ICON_EXT)))
+                continue
+            f.save(os.path.join(folder, name))
+            saved.append(name)
+        if saved:
+            flash("Hochgeladen: %s" % ", ".join(saved))
+        return redirect(url_for("admin.icons"))
+    names = sorted(n for n in os.listdir(folder) if n.lower().endswith(ICON_EXT))
+    return render_template("admin/icons.html", names=names)

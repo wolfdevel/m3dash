@@ -1,0 +1,30 @@
+{
+  "columns": 8,
+  "size": "s",
+  "frame": false,
+  "refresh": 20,
+  "widgets": [
+    {"type": "value", "label": "", "icon": "thermo.png", "width": 2, "topic": "fhem/aussen/temperature", "unit": "°C", "decimals": 1},
+    {"type": "value", "icon": "sonne.png", "width": 2, "topic": "fhem/pv/power", "unit": "W", "decimals": 0},
+    {"type": "value", "icon": "thermo.png", "width": 2, "topic": "fhem/wohnzimmer/temperature", "unit": "°C", "decimals": 1},
+    {"type": "bar", "icon": "sonne.png", "width": 2, "topic": "fhem/pv/soc", "unit": "%", "decimals": 0, "min": 0, "max": 100},
+    {"type": "text", "label": "Radio", "width": 8, "topic": "fhem/radio/title", "frame": true},
+    {"type": "switch", "label": "Deckenlampe", "name": "deckenlampe", "topic": "fhem/deckenlampe/state",
+     "icon_off": "lampe.png", "icon_on": "lampe_an.png", "frame": false},
+    {"type": "switch", "label": "Monitor", "name": "monitor", "topic": "fhem/monitor/state", "icon": "monitor.png"},
+    {"type": "switch", "label": "Stehlampe", "name": "stehlampe", "topic": "fhem/stehlampe/state", "icon": "lampe.png"},
+    {"type": "switch", "label": "Licht Büro", "name": "licht_buero", "topic": "fhem/buero/state", "icon": "lampe.png"},
+    {"type": "button", "label": "Rollo 1 auf", "name": "rollo1", "payload": "up", "text": "Λ", "font_size": 22},
+    {"type": "button", "label": "Rollo 1 ab", "name": "rollo1", "payload": "down", "text": "V", "font_size": 22},
+    {"type": "button", "label": "Rollo 2 auf", "name": "rollo2", "payload": "up", "text": "Λ", "font_size": 22},
+    {"type": "button", "label": "Rollo 2 ab", "name": "rollo2", "payload": "down", "text": "V", "font_size": 22},
+    {"type": "chart", "width": 8, "hours": 24, "height": 260, "unit": "%", "ymin": 0, "ymax": 100,
+     "unit2": "kW", "frame": true,
+     "series": [
+       {"source": "PV:soc", "label": "Batterie SOC", "style": "area"},
+       {"source": "PV:pv", "label": "Leistung PV", "axis": "right"},
+       {"source": "PV:haus", "label": "Leistung Haus + Auto", "axis": "right"},
+       {"source": "PV:netz", "label": "Leistung Netz", "axis": "right"}
+     ]}
+  ]
+}

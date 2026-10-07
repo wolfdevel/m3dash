@@ -1,8 +1,9 @@
 import json
+import os
 import time
 
 from flask import (Blueprint, Response, abort, current_app, flash, jsonify, redirect, render_template,
-                   request, session, url_for)
+                   request, send_from_directory, session, url_for)
 
 from . import render, widgets
 from .auth import check_csrf, csrf_token, current_user, login_required, theme_for
@@ -179,7 +180,7 @@ def gauge_png(dash_id, idx):
         v = float(request.args.get("v"))
     except (TypeError, ValueError):
         v = None
-    width = 160 + 80 * min(w["width"], 2)
+    width = int((160 + 80 * min(w["width"], 2)) * widgets.GAUGE_SCALE[w["size"]])
     return _png(render.gauge(v, w, _img_theme(), width=width), 86400)
 
 
@@ -211,6 +212,17 @@ def chart_png(dash_id, idx):
     png = render.chart(load, w, _img_theme(), width=width, height=w["height"],
                        cache_key=key, ttl=current_app.cfg.CHART_CACHE_SECONDS)
     return _png(png, current_app.cfg.CHART_CACHE_SECONDS)
+
+
+@bp.route("/icons/<path:name>")
+@login_required
+def icon(name):
+    # Eigene Symbole: Dateien im Volume unter /data/icons (hochladen unter Verwaltung > Symbole)
+    resp = send_from_directory(os.path.join(current_app.cfg.DATA_DIR, "icons"), name, max_age=86400)
+    resp.headers["Cache-Control"] = "private, max-age=86400"
+    # SVG-Dateien direkt geöffnet dürfen kein Skript ausführen
+    resp.headers["Content-Security-Policy"] = "default-src 'none'; style-src 'unsafe-inline'; img-src data:"
+    return resp
 
 
 # --- Eigenes Konto ---------------------------------------------------------

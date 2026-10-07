@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}Symbole{% endblock %}
+{% block body %}
+<div class="box">
+{% include "admin/_nav.html" %}
+<h1>Symbole</h1>
+<p class="hint">Eigene Symbole für Werte, Schalter und Buttons. Im Dashboard mit <span class="mono">"icon": "dateiname.png"</span>
+verwenden (für Schalter optional <span class="mono">"icon_on"</span> / <span class="mono">"icon_off"</span>).
+Für Kindle und ältere Geräte am besten PNG oder GIF in Schwarz auf transparentem/weißem Hintergrund, etwa 48–96 px groß.
+SVG funktioniert auf neueren Geräten. Statt eines Dateinamens geht auch eine volle URL, z.B. ein FHEM-Symbol.</p>
+<form method="post" enctype="multipart/form-data">
+  <input type="hidden" name="csrf" value="{{ csrf_token() }}">
+  <input type="file" name="files" multiple accept=".png,.gif,.jpg,.jpeg,.svg">
+  <input type="submit" value="Hochladen">
+</form>
+{% if names %}
+<table class="list" style="margin-top:16px">
+  <tr><th>Symbol</th><th>Name</th><th></th></tr>
+  {% for n in names %}
+  <tr><td><img src="{{ url_for('views.icon', name=n) }}" width="40" height="40" alt=""></td>
+      <td class="mono">{{ n }}</td>
+      <td><form method="post" class="inline" onsubmit="return confirm('{{ n }} löschen?')">
+        <input type="hidden" name="csrf" value="{{ csrf_token() }}"><input type="hidden" name="delete" value="{{ n }}">
+        <input type="submit" value="Löschen"></form></td></tr>
+  {% endfor %}
+</table>
+{% else %}
+<p>Noch keine Symbole hochgeladen.</p>
+{% endif %}
+</div>
+{% endblock %}

@@ -5,14 +5,13 @@
 {% include "admin/_nav.html" %}
 <h1>Status</h1>
 <table class="list" style="margin-top:10px">
-  <tr><td>MQTT-Broker</td><td class="mono">{{ cfg.MQTT_HOST }}:{{ cfg.MQTT_PORT }}</td>
-      <td>{% if mqtt.connected %}<span class="ok">verbunden</span>{% else %}<span class="bad">getrennt</span> {{ mqtt.last_error }}{% endif %}</td></tr>
-  <tr><td>Abonnements</td><td class="mono">{{ cfg.MQTT_SUBSCRIBE|join(', ') }}</td><td>{{ topic_count }} Topics mit Werten</td></tr>
+  {% for s in sources %}{% set st = s.status() %}
+  <tr><td>Quelle <span class="mono">{{ s.name }}</span> ({{ kinds[s.kind][0] }})</td><td class="mono">{{ s.target }}</td>
+      <td>{% if st[0] %}<span class="ok">{{ st[1] }}</span>{% else %}<span class="bad">{{ st[1] }}</span>{% endif %}</td></tr>
+  {% if s.kind == 'mqtt' %}<tr><td>Abonnements <span class="mono">{{ s.name }}</span></td><td class="mono" colspan="2">{{ s.s.subscribe|join(', ') }}</td></tr>{% endif %}
+  {% endfor %}
   <tr><td>Sende-Präfix</td><td class="mono" colspan="2">{{ cfg.MQTT_COMMAND_PREFIX }}…</td></tr>
   <tr><td>Senden erlaubt auf</td><td class="mono" colspan="2">{{ cfg.MQTT_PUBLISH_ALLOW|join(', ') }}</td></tr>
-  <tr><td>MariaDB (Historie)</td><td class="mono">{{ cfg.DB_HOST or '–' }}:{{ cfg.DB_PORT }}/{{ cfg.DB_NAME }}</td>
-      <td>{% if db_ok %}<span class="ok">erreichbar</span>{% else %}<span class="bad">nicht erreichbar</span> {{ db_error }}{% endif %}</td></tr>
-  <tr><td>Historien-Abfrage</td><td class="mono" colspan="2">{{ cfg.HISTORY_QUERY }}</td></tr>
 </table>
 <h2 style="margin-top:20px">Letzte Aktionen</h2>
 <table class="list">

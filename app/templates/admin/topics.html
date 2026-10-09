@@ -1,13 +1,23 @@
 {% extends "base.html" %}
-{% block title %}MQTT-Topics{% endblock %}
+{% block title %}Werte{% endblock %}
 {% block body %}
 <div class="box">
 {% include "admin/_nav.html" %}
-<h1>MQTT-Topics</h1>
-<form method="get" style="max-width:420px"><input type="text" name="q" value="{{ q }}" placeholder="Filter, z.B. zigbee2mqtt"><input type="submit" value="Suchen"></form>
+<h1>Werte aus „{{ src.name }}“</h1>
+<form method="get" style="max-width:420px">
+  <select name="source">{% for s in sources %}<option value="{{ s.name }}"{% if s.name == src.name %} selected{% endif %}>{{ s.name }}</option>{% endfor %}</select>
+  <input type="text" name="q" value="{{ q }}" placeholder="Filter, z.B. {{ 'Wohnzimmer' if src.kind == 'fhemdb' else 'zigbee2mqtt' }}"><input type="submit" value="Anzeigen">
+</form>
+{% if src.kind == 'fhemdb' %}
+<p class="hint">{{ rows|length }} von {{ total }} Readings aus der Tabelle current{% if src.last_error %} · <span class="bad">{{ src.last_error }}</span>{% endif %}.
+Im Widget: <span class="mono">"source": "{{ src.name }}", "device": "GERÄT", "reading": "READING"</span>.</p>
+<table class="list">
+  <tr><th>Gerät:Reading</th><th>Wert</th><th>Alter</th></tr>
+{% else %}
 <p class="hint">{{ rows|length }} von {{ total }} Topics. Ein JSON-Feld wählt man im Widget mit <span class="mono">"json_path": "temperature"</span>.</p>
 <table class="list">
   <tr><th>Topic</th><th>Letzter Wert</th><th>Alter</th></tr>
+{% endif %}
   {% for t, p, age in rows %}<tr><td class="mono">{{ t }}</td><td class="mono">{{ p }}</td><td>{{ age }} s</td></tr>{% endfor %}
 </table>
 </div>

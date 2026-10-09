@@ -31,7 +31,7 @@
     <button type="submit" title="{{ w.label }}"{% if fs %} style="{{ fs }}"{% endif %}{% if not can_act %} disabled{% endif %}>{% if w.icon_on or w.icon_off %}<img class="icon" id="i{{ i }}" src="{{ s.i or w.icon_off }}" height="{{ isz }}" alt="{{ w.label }}">{% endif %}{% if w.show_text %}{% if w.icon_on or w.icon_off %}<br>{% endif %}<span id="v{{ i }}">{{ s.t }}</span>{% endif %}</button>
     {% else %}
     <button type="submit" title="{{ w.label }}"{% if fs %} style="{{ fs }}"{% endif %}{% if not can_act %} disabled{% endif %}>{% if w.icon %}<img class="icon" src="{{ w.icon }}" height="{{ isz }}" alt="{{ w.label }}">{% if w.text %}<br>{% endif %}{% endif %}{{ w.text }}</button>
-    {% if w.topic %}<div class="sub" id="v{{ i }}">{{ s.t }}</div>{% endif %}
+    {% if w.key %}<div class="sub" id="v{{ i }}">{{ s.t }}</div>{% endif %}
     {% endif %}
   </form>
   {% elif w.type == 'chart' %}

@@ -31,14 +31,20 @@ services:
       # Schaltflächen dürfen nur hierhin publizieren
       MQTT_PUBLISH_ALLOW: ${MQTT_PUBLISH_ALLOW:-m3dash/stat/#}
 
-      # MariaDB mit der FHEM-DbLog-Historie (lesender Benutzer genügt)
+      # FHEM-DbLog-Datenbank = Quelle "fhem": aktuelle Werte (Tabelle current) und Diagramme (history).
+      # Lesender Benutzer genügt (SELECT auf current und history). Weitere Quellen: Verwaltung > Quellen.
+      DB_BACKEND: ${DB_BACKEND:-mysql}   # mysql (auch MariaDB), postgresql oder sqlite
       DB_HOST: ${DB_HOST:-}
-      DB_PORT: ${DB_PORT:-3306}
+      DB_PORT: ${DB_PORT:-}              # leer = 3306 bzw. 5432
       DB_NAME: ${DB_NAME:-fhem}
       DB_USER: ${DB_USER:-dashboard_ro}
       DB_PASSWORD: ${DB_PASSWORD:-}
-      # Optional: eigenes SQL für die Historie (Standard: FHEM-Tabelle history, siehe README)
+      CURRENT_INTERVAL: ${CURRENT_INTERVAL:-10}   # Sekunden zwischen zwei Abfragen von current
+      # Nur SQLite: Datei als Volume einbinden und hier den Pfad im Container angeben, z.B. /fhem/fhem.db
+      # DB_PATH: /fhem/fhem.db
+      # Optional: eigenes SQL (Standard: FHEM-Tabellen current/history, siehe README)
       # HISTORY_QUERY: ...
+      # CURRENT_QUERY: ...
 
 volumes:
   dashboard-data:

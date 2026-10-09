@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}Quellen{% endblock %}
+{% block body %}
+<div class="box">
+{% include "admin/_nav.html" %}
+<h1>Quellen</h1>
+<a class="btn" href="{{ url_for('admin.source_edit', kind='fhemdb') }}">Neue FHEM-Datenbank</a>
+<a class="btn" href="{{ url_for('admin.source_edit', kind='mqtt') }}">Neuer MQTT-Broker</a>
+<p class="hint">Widgets wählen ihre Quelle mit <span class="mono">"source": "NAME"</span> (Standard <span class="mono">mqtt</span>,
+bei Diagrammen <span class="mono">fhem</span>). Quellen aus den Umgebungsvariablen des Stacks lassen sich hier nicht ändern.</p>
+<table class="list">
+  <tr><th>Name</th><th>Typ</th><th>Ziel</th><th>Zustand</th><th></th></tr>
+  {% for s in sources %}{% set st = s.status() %}<tr>
+    <td class="mono">{{ s.name }}</td><td>{{ kinds[s.kind][0] }}</td><td class="mono">{{ s.target }}</td>
+    <td>{% if st[0] %}<span class="ok">{{ st[1] }}</span>{% else %}<span class="bad">{{ st[1] }}</span>{% endif %}</td>
+    <td><a href="{{ url_for('admin.topics', source=s.name) }}">Werte</a>
+      {% if s.builtin %}· Umgebungsvariablen{% else %}· <a href="{{ url_for('admin.source_edit', name=s.name) }}">Bearbeiten</a>{% endif %}</td>
+  </tr>{% endfor %}
+</table>
+</div>
+{% endblock %}

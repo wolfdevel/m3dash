@@ -28,7 +28,9 @@
             "frame": false  (Widgets ohne Rahmen/Hintergrund)   "icon_base" (Standard /icons/)
             "mobile_stack": false  (auf schmalen Handys nicht untereinander stapeln)
 
-Alle Widgets:  "type", "label", "width" (Spalten), "topic", "json_path" (z.B. "temperature" oder "a.b.0"),
+Quelle:        "source" (Name unter Verwaltung > Quellen, Standard "mqtt", bei Diagrammen "fhem")
+               MQTT: "topic"   FHEM-Datenbank (Tabelle current): "device" + "reading" oder "reading": "GERÄT:READING"
+Alle Widgets:  "type", "label", "width" (Spalten), "json_path" (z.B. "temperature" oder "a.b.0"),
                "unit", "decimals", "map" ({"0": "Aus", "1": "An"}), "stale_after" (Sekunden ohne Update -> grau)
                "warn_above" / "warn_below" (Wert hervorheben)
 Darstellung:   "size" (xs–xl, überschreibt das Dashboard), "font_size" (px für Wert/Button-Text),
@@ -43,12 +45,14 @@ bar      Balken: "min", "max"
 Senden:  Schalter und Buttons senden auf {{ prefix }}NAME. NAME kommt aus "name",
          sonst aus "label" ("Stehlampe Küche" -> stehlampe_kueche). "command_topic" überschreibt das ganz.
 
-switch   Schalter mit Zustand: "name", "topic" (Zustand, Standard = Sende-Topic), "on_value"/"off_value" (Standard ON/OFF),
+switch   Schalter mit Zustand: "name", "topic" bzw. "device"/"reading" (Zustand, Standard = Sende-Topic),
+         "on_value"/"off_value" (Standard ON/OFF, Groß-/Kleinschreibung egal),
          "payload_on"/"payload_off", "text_on"/"text_off", "retain", "qos", "confirm",
          "icon_on"/"icon_off" (Symbol je Zustand), "show_text" (Text unter dem Symbol, Standard nur ohne Symbol)
 button   Schaltfläche: "name", "payload", "text" (leer = nur Symbol), optional "topic" für eine Statuszeile,
          "retain", "qos", "confirm"
-chart    Verlauf aus FHEM-DbLog: "series": [{"source": "GERÄT:READING", "label": "...",
+chart    Verlauf aus FHEM-DbLog (Tabelle history, Datenbank mit "source" wählbar, Standard "fhem"):
+         "series": [{"source": "GERÄT:READING", "label": "...",
          "style": "line" | "step" | "area" | "bar" | "points", "axis": "left" | "right", "color": "#d9822b",
          "map": optional {"on": 1, "off": 0}, "query": optional eigenes SQL}],
          "hours", "height", "unit", "ymin", "ymax"  (linke Achse),

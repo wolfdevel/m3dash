@@ -6,7 +6,7 @@ import time
 from flask import Blueprint, abort, current_app, flash, redirect, render_template, request, url_for
 from werkzeug.utils import secure_filename
 
-from . import widgets
+from . import fhemdb, sources as sources_mod, widgets
 from .auth import admin_required, check_csrf, current_user
 from .store import ROLES
 
@@ -16,11 +16,8 @@ bp = Blueprint("admin", __name__, url_prefix="/admin")
 @bp.route("/")
 @admin_required
 def status():
-    m = current_app.mqtt
-    h = current_app.history
-    db_ok = h.ping()
-    return render_template("admin/status.html", mqtt=m, cfg=current_app.cfg, db_ok=db_ok, db_error=h.last_error,
-                           topic_count=len(m.values), log=current_app.store.action_log(50),
+    return render_template("admin/status.html", cfg=current_app.cfg, sources=current_app.sources.all(),
+                           kinds=sources_mod.KINDS, log=current_app.store.action_log(50),
                            fmt_ts=lambda t: time.strftime("%d.%m. %H:%M:%S", time.localtime(t)))
 
 
@@ -133,7 +130,8 @@ def dashboard_edit(did=None):
         if error is None:
             try:
                 data = json.loads(form["config"])
-                widgets.normalize(data, current_app.cfg.MQTT_PUBLISH_ALLOW, current_app.cfg.MQTT_COMMAND_PREFIX)  # nur prüfen; gespeichert wird die Eingabe des Admins
+                checked = widgets.normalize(data, current_app.cfg.MQTT_PUBLISH_ALLOW, current_app.cfg.MQTT_COMMAND_PREFIX)  # nur prüfen; gespeichert wird die Eingabe des Admins
+                widgets.check_sources(checked, current_app.sources.kinds())
             except ValueError as e:
                 error = str(e)
         if error:
@@ -163,21 +161,134 @@ def dashboard_delete(did):
     return redirect(url_for("admin.dashboards"))
 
 
-# --- Topic-Browser ---------------------------------------------------------
+# --- Werte-Browser (MQTT-Topics bzw. FHEM-Readings) ------------------------
 
 @bp.route("/topics")
 @admin_required
 def topics():
     q = request.args.get("q", "").strip()
+    src = current_app.sources.get(request.args.get("source") or "mqtt")
+    if src is None:
+        abort(404)
     rows = []
     now = time.time()
-    for topic, (payload, ts) in current_app.mqtt.topics():
+    all_rows = src.topics()
+    for topic, (payload, ts) in all_rows:
         if q and q.lower() not in topic.lower():
             continue
         rows.append((topic, payload[:300], int(now - ts)))
         if len(rows) >= 500:
             break
-    return render_template("admin/topics.html", rows=rows, q=q, total=len(current_app.mqtt.values))
+    return render_template("admin/topics.html", rows=rows, q=q, total=len(all_rows), src=src,
+                           sources=current_app.sources.all())
+
+
+# --- Quellen (Konnektoren) -------------------------------------------------
+
+@bp.route("/sources")
+@admin_required
+def sources():
+    return render_template("admin/sources.html", sources=current_app.sources.all(), kinds=sources_mod.KINDS)
+
+
+def _settings_from_form(kind, old):
+    """Einstellungen aus dem Formular; leeres Passwort = bisheriges behalten."""
+    f = request.form
+    if kind == "mqtt":
+        s = {
+            "host": f.get("host", "").strip(),
+            "port": int(f.get("port") or 1883),
+            "user": f.get("user", "").strip(),
+            "tls": bool(f.get("tls")),
+            "subscribe": [t.strip() for t in f.get("subscribe", "").split(",") if t.strip()] or ["#"],
+        }
+        if not s["host"]:
+            raise ValueError("Host fehlt.")
+    else:
+        s = {
+            "backend": f.get("backend", "mysql"),
+            "host": f.get("host", "").strip(),
+            "port": int(f.get("port") or 0),
+            "database": f.get("database", "").strip(),
+            "user": f.get("user", "").strip(),
+            "path": f.get("path", "").strip(),
+            "interval": max(2, int(f.get("interval") or 10)),
+            "current_query": f.get("current_query", "").strip() or fhemdb.CURRENT_QUERY,
+            "history_query": f.get("history_query", "").strip() or fhemdb.HISTORY_QUERY,
+        }
+        if s["backend"] not in fhemdb.BACKENDS:
+            raise ValueError("Unbekanntes Backend.")
+        if s["backend"] == "sqlite" and not s["path"]:
+            raise ValueError("Pfad zur SQLite-Datei fehlt.")
+        if s["backend"] != "sqlite" and not (s["host"] and s["database"]):
+            raise ValueError("Host und Datenbank fehlen.")
+    s["password"] = f.get("password", "") or (old or {}).get("password", "")
+    if f.get("clear_password"):
+        s["password"] = ""
+    return s
+
+
+@bp.route("/sources/new/<kind>", methods=["GET", "POST"])
+@bp.route("/sources/<name>/edit", methods=["GET", "POST"])
+@admin_required
+def source_edit(kind=None, name=None):
+    reg = current_app.sources
+    src = reg.get(name) if name else None
+    if name and src is None:
+        abort(404)
+    if src is not None:
+        if src.builtin:
+            abort(403)
+        kind = src.kind
+    if kind not in sources_mod.KINDS:
+        abort(404)
+    settings = dict(src.s) if src else dict(sources_mod.KINDS[kind][2])
+    form_name = name or ""
+    if request.method == "POST":
+        check_csrf()
+        form_name = request.form.get("name", "").strip().lower()
+        error = None
+        try:
+            settings = _settings_from_form(kind, src.s if src else None)
+        except ValueError as e:
+            error = str(e)
+        if error is None:
+            if not sources_mod.NAME_RE.match(form_name):
+                error = "Name: 1–31 Zeichen, nur a–z, 0–9, _ und -."
+            elif form_name != name and reg.get(form_name) is not None:
+                error = "Der Name ist schon vergeben."
+        if error is None:
+            try:
+                new = reg.save(form_name, kind, settings, old_name=name)
+            except ValueError as e:
+                error = str(e)
+        if error:
+            flash(error)
+            return render_template("admin/source_edit.html", kind=kind, kinds=sources_mod.KINDS, name=form_name,
+                                   s=settings, src=src, backends=fhemdb.BACKENDS), 400
+        msg = "Quelle '%s' gespeichert." % form_name
+        if kind == "fhemdb":  # FHEM-Datenbank gleich prüfen, MQTT verbindet sich im Hintergrund
+            msg += " Verbindung: " + ("OK" if new.ping() else "fehlgeschlagen (%s)" % new.last_error)
+        if name and form_name != name:
+            msg += " Dashboards, die '%s' verwenden, bitte anpassen." % name
+        flash(msg)
+        return redirect(url_for("admin.sources"))
+    return render_template("admin/source_edit.html", kind=kind, kinds=sources_mod.KINDS, name=form_name,
+                           s=settings, src=src, backends=fhemdb.BACKENDS)
+
+
+@bp.route("/sources/<name>/delete", methods=["POST"])
+@admin_required
+def source_delete(name):
+    check_csrf()
+    src = current_app.sources.get(name)
+    if src is None:
+        abort(404)
+    if src.builtin:
+        abort(403)
+    current_app.sources.delete(name)
+    flash("Quelle '%s' gelöscht." % name)
+    return redirect(url_for("admin.sources"))
 
 
 # --- Symbole ---------------------------------------------------------------

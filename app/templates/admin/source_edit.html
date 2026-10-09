@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}Quelle{% endblock %}
+{% block body %}
+<div class="box">
+{% include "admin/_nav.html" %}
+<h1>{% if src %}Quelle „{{ src.name }}“{% else %}Neue Quelle: {{ kinds[kind][0] }}{% endif %}</h1>
+<form method="post" style="max-width:520px">
+  <input type="hidden" name="csrf" value="{{ csrf_token() }}">
+  <label for="n">Name (für <span class="mono">"source"</span> im Widget)</label>
+  <input type="text" id="n" name="name" value="{{ name }}" autocapitalize="off" placeholder="{{ 'fhem' if kind == 'fhemdb' else 'mqtt2' }}">
+  {% if kind == 'fhemdb' %}
+  <label for="b">Datenbank</label>
+  <select id="b" name="backend">
+    {% for b, t in [('mysql', 'MySQL / MariaDB'), ('postgresql', 'PostgreSQL'), ('sqlite', 'SQLite (Datei im Container)')] %}
+    <option value="{{ b }}"{% if s.backend == b %} selected{% endif %}>{{ t }}</option>{% endfor %}
+  </select>
+  <label for="h">Host</label><input type="text" id="h" name="host" value="{{ s.host }}" autocapitalize="off" placeholder="cynas">
+  <label for="p">Port (leer = Standard: 3306 bzw. 5432)</label><input type="number" id="p" name="port" value="{{ s.port or '' }}">
+  <label for="d">Datenbankname</label><input type="text" id="d" name="database" value="{{ s.database }}" autocapitalize="off">
+  <label for="f">Nur SQLite: Pfad zur Datei im Container</label><input type="text" id="f" name="path" value="{{ s.path }}" autocapitalize="off" placeholder="/fhem/fhem.db">
+  <label for="u">Benutzer (Leserechte auf current und history genügen)</label><input type="text" id="u" name="user" value="{{ s.user }}" autocapitalize="off">
+  {% else %}
+  <label for="h">Host</label><input type="text" id="h" name="host" value="{{ s.host }}" autocapitalize="off">
+  <label for="p">Port</label><input type="number" id="p" name="port" value="{{ s.port }}">
+  <label for="u">Benutzer</label><input type="text" id="u" name="user" value="{{ s.user }}" autocapitalize="off">
+  {% endif %}
+  <label for="pw">Passwort{% if src and src.s.password %} (leer lassen = unverändert){% endif %}</label>
+  <input type="password" id="pw" name="password" autocomplete="new-password">
+  {% if src and src.s.password %}<label style="margin:4px 0"><input type="checkbox" name="clear_password" value="1"> Passwort entfernen</label>{% endif %}
+  {% if kind == 'fhemdb' %}
+  <label for="i">Abfrageintervall für aktuelle Werte (Sekunden)</label><input type="number" id="i" name="interval" value="{{ s.interval }}" min="2">
+  <label for="cq">SQL für aktuelle Werte, liefert DEVICE, READING, VALUE, TIMESTAMP</label>
+  <textarea id="cq" name="current_query" rows="2" spellcheck="false">{{ s.current_query }}</textarea>
+  <label for="hq">SQL für Diagramme (Platzhalter %(device)s, %(reading)s, %(start)s, %(end)s)</label>
+  <textarea id="hq" name="history_query" rows="4" spellcheck="false">{{ s.history_query }}</textarea>
+  {% else %}
+  <label style="margin:4px 0"><input type="checkbox" name="tls" value="1"{% if s.tls %} checked{% endif %}> TLS</label>
+  <label for="sub">Abonnements (kommagetrennt)</label><input type="text" id="sub" name="subscribe" value="{{ s.subscribe|join(',') }}" autocapitalize="off">
+  {% endif %}
+  <input type="submit" value="Speichern">
+</form>
+{% if src %}
+<form method="post" action="{{ url_for('admin.source_delete', name=src.name) }}" onsubmit="return confirm('Quelle wirklich löschen?')" style="margin-top:20px">
+  <input type="hidden" name="csrf" value="{{ csrf_token() }}"><input type="submit" value="Quelle löschen">
+</form>
+{% endif %}
+</div>
+{% endblock %}

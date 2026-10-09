@@ -39,6 +39,12 @@ CREATE TABLE IF NOT EXISTS action_log (
     topic TEXT NOT NULL,
     payload TEXT NOT NULL
 );
+CREATE TABLE IF NOT EXISTS sources (
+    name TEXT PRIMARY KEY,
+    kind TEXT NOT NULL,
+    settings TEXT NOT NULL,
+    updated REAL NOT NULL
+);
 """
 
 
@@ -170,6 +176,23 @@ class Store:
                 "INSERT INTO access (user_id, dashboard_id) VALUES (?, ?)", [(user_id, d) for d in dash_ids]
             )
             c.commit()
+
+    # --- Quellen (Konnektoren) ----------------------------------------------
+    def sources(self):
+        rows = self._q("SELECT * FROM sources ORDER BY name")
+        return [{"name": r["name"], "kind": r["kind"], "settings": json.loads(r["settings"])} for r in rows]
+
+    def save_source(self, old_name, name, kind, settings):
+        data = json.dumps(settings, ensure_ascii=False)
+        with self._lock:
+            c = self._conn()
+            c.execute("DELETE FROM sources WHERE name = ?", (old_name,))
+            c.execute("INSERT OR REPLACE INTO sources (name, kind, settings, updated) VALUES (?, ?, ?, ?)",
+                      (name, kind, data, time.time()))
+            c.commit()
+
+    def delete_source(self, name):
+        self._x("DELETE FROM sources WHERE name = ?", (name,))
 
     # --- Protokoll ----------------------------------------------------------
     def log_action(self, username, topic, payload):

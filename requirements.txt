@@ -4,3 +4,4 @@ paho-mqtt==2.1.*
 PyMySQL==1.1.*
 matplotlib==3.10.*
 Pillow==11.*
+pg8000==1.31.*

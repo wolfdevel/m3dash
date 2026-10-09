@@ -1,6 +1,8 @@
 """Konfiguration ausschließlich über Umgebungsvariablen (Portainer-Stack / docker-compose)."""
 import os
 
+from . import fhemdb
+
 
 def _bool(name, default=False):
     v = os.environ.get(name)
@@ -42,21 +44,21 @@ class Config:
                           if t.strip()]
     MQTT_MAX_TOPICS = _int("MQTT_MAX_TOPICS", 10000)
 
-    # MariaDB (Historie, nur lesend)
+    # FHEM-DbLog-Datenbank (nur lesend): Quelle "fhem" für aktuelle Werte (Tabelle current) und Diagramme (history)
+    DB_BACKEND = os.environ.get("DB_BACKEND", "mysql").strip().lower()  # mysql (auch MariaDB), postgresql, sqlite
     DB_HOST = os.environ.get("DB_HOST", "")
-    DB_PORT = _int("DB_PORT", 3306)
+    DB_PORT = _int("DB_PORT", 0)  # 0 = Standardport des Backends (3306 bzw. 5432)
     DB_USER = os.environ.get("DB_USER", "")
     DB_PASSWORD = os.environ.get("DB_PASSWORD", "")
     DB_NAME = os.environ.get("DB_NAME", "fhem")
+    DB_PATH = os.environ.get("DB_PATH", "")  # nur SQLite: Pfad zur fhem.db im Container
     # SQL für eine Zeitreihe. Platzhalter: %(source)s, %(device)s, %(reading)s, %(start)s, %(end)s
     # ("source" im Chart-Widget hat die Form "GERÄT:READING"). Muss (Zeitstempel, Wert) liefern.
     # Standard: FHEM-DbLog-Tabelle "history".
-    HISTORY_QUERY = os.environ.get(
-        "HISTORY_QUERY",
-        "SELECT TIMESTAMP, VALUE FROM history "
-        "WHERE DEVICE = %(device)s AND READING = %(reading)s "
-        "AND TIMESTAMP BETWEEN %(start)s AND %(end)s ORDER BY TIMESTAMP",
-    )
+    HISTORY_QUERY = os.environ.get("HISTORY_QUERY", "") or fhemdb.HISTORY_QUERY
+    # SQL für aktuelle Werte, muss (DEVICE, READING, VALUE, TIMESTAMP) liefern. Standard: Tabelle "current".
+    CURRENT_QUERY = os.environ.get("CURRENT_QUERY", "") or fhemdb.CURRENT_QUERY
+    CURRENT_INTERVAL = _int("CURRENT_INTERVAL", 10)  # Sekunden zwischen zwei Abfragen von "current"
     HISTORY_MAX_POINTS = _int("HISTORY_MAX_POINTS", 600)
     CHART_CACHE_SECONDS = _int("CHART_CACHE_SECONDS", 60)
     TZ = os.environ.get("TZ", "Europe/Vienna")

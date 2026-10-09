@@ -6,8 +6,7 @@ import secrets
 from flask import Flask
 
 from .config import Config
-from .history import History
-from .mqtt_client import MqttBridge
+from .sources import Sources
 from .store import Store
 
 
@@ -41,8 +40,8 @@ def create_app(cfg=Config, start_mqtt=True):
     app.json.ensure_ascii = False
     app.cfg = cfg
     app.store = Store(os.path.join(cfg.DATA_DIR, "app.db"))
-    app.mqtt = MqttBridge(cfg)
-    app.history = History(cfg)
+    app.sources = Sources(cfg, app.store)
+    app.mqtt = app.sources.mqtt
 
     if app.store.user_count() == 0:
         pw = cfg.ADMIN_PASSWORD or secrets.token_urlsafe(10)
@@ -58,5 +57,5 @@ def create_app(cfg=Config, start_mqtt=True):
     app.register_blueprint(admin.bp)
 
     if start_mqtt:
-        app.mqtt.start()
+        app.sources.start()
     return app

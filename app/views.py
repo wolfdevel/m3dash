@@ -99,7 +99,7 @@ def dashboard(slug):
     row, cfg = load_dashboard(slug=slug)
     th = theme_for(current_user())
     refresh = cfg["refresh"] * (3 if th == "eink" else 1)  # E-Ink: seltener, schont Akku und Display
-    states = [widgets.state(current_app.mqtt, w, i, row["id"], th) for i, w in enumerate(cfg["widgets"])]
+    states = [widgets.state(current_app.sources, w, i, row["id"], th) for i, w in enumerate(cfg["widgets"])]
     return render_template("dashboard.html", dash=row, cfg=cfg, states=states, refresh=refresh,
                            chart_bucket=_chart_bucket(cfg), now=time.strftime("%H:%M:%S"),
                            can_act=current_user()["role"] in ("operator", "admin"))
@@ -116,7 +116,7 @@ def dashboard_state(slug):
     out = {}
     th = theme_for(current_user())
     for i, w in enumerate(cfg["widgets"]):
-        s = widgets.state(current_app.mqtt, w, i, row["id"], th)
+        s = widgets.state(current_app.sources, w, i, row["id"], th)
         if s is not None:
             out[str(i)] = s
     return jsonify({"w": out, "now": time.strftime("%H:%M:%S"), "cb": _chart_bucket(cfg),
@@ -135,8 +135,8 @@ def action(slug, idx):
         abort(404)
     w = cfg["widgets"][idx]
     if w["type"] == "switch":
-        val, _ = widgets.raw_value(current_app.mqtt, w)
-        payload = w["payload_off"] if val == str(w["on_value"]) else w["payload_on"]
+        val, _ = widgets.raw_value(current_app.sources, w)
+        payload = w["payload_off"] if widgets.is_on(w, val) else w["payload_on"]
     elif w["type"] == "button":
         payload = w["payload"]
     else:
@@ -145,7 +145,11 @@ def action(slug, idx):
         payload = json.dumps(payload, ensure_ascii=False)
     if not widgets.publish_allowed(w["command_topic"], current_app.cfg.MQTT_PUBLISH_ALLOW):
         abort(403, "Dieses Topic ist zum Senden nicht freigegeben.")
-    ok = current_app.mqtt.connected and current_app.mqtt.publish(
+    # Gesendet wird über den Broker des Widgets, bei FHEM-Quellen über den Standard-Broker "mqtt"
+    broker = current_app.sources.get(w["source"])
+    if broker is None or broker.kind != "mqtt":
+        broker = current_app.sources.mqtt
+    ok = broker.connected and broker.publish(
         w["command_topic"], payload, retain=w["retain"], qos=w["qos"])
     current_app.store.log_action(u["username"], w["command_topic"], payload if ok else payload + "  [FEHLER]")
     msg = "Gesendet: %s" % (w["label"] or w["command_topic"]) if ok else "Senden fehlgeschlagen (MQTT nicht verbunden)"
@@ -195,13 +199,16 @@ def chart_png(dash_id, idx):
         width = max(200, min(1600, int(request.args.get("w", 0)) or 300 * w["width"]))
     except ValueError:
         width = 300 * w["width"]
-    hist = current_app.history
+    db = current_app.sources.get(w["source"])
 
     def load():
         data = []
         for s in w["series"]:
             try:
-                pts = hist.series(s["source"], s.get("hours", w["hours"]), s.get("query"), s.get("map"))
+                if db is None or db.kind != "fhemdb":
+                    raise RuntimeError("Quelle '%s' ist keine FHEM-Datenbank" % w["source"])
+                pts = db.series(s["source"], s.get("hours", w["hours"]), s.get("query"), s.get("map"),
+                                current_app.cfg.HISTORY_MAX_POINTS)
                 data.append((s.get("label", s["source"]), pts, "", s))
             except Exception as e:
                 current_app.logger.warning("Historie für %s: %s", s["source"], e)

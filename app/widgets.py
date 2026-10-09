@@ -131,8 +131,13 @@ def normalize(config, publish_allow=None, command_prefix="m3dash/stat/"):
             n["icon_on"] = n["icon_on"] or n["icon"]
             n["icon_off"] = n["icon_off"] or n["icon"]
         n["icon_size"] = _int(n.get("icon_size", ICON_SIZES[n["size"]]), "icon_size", i, 8, 400)
-        if t in ("value", "text", "gauge", "bar") and not n.get("topic"):
-            raise ValueError("Widget %d (%s): 'topic' fehlt" % (i + 1, t))
+        # Woher der Wert kommt: "source" wählt die Quelle (Standard "mqtt", Diagramme "fhem"),
+        # bei FHEM-Quellen gibt "device" + "reading" (oder "reading": "GERÄT:READING") den Wert an.
+        n["source"] = str(n.get("source") or ("fhem" if t == "chart" else "mqtt"))
+        if t != "chart":
+            n["key"] = _reading_key(n, i) or n.get("topic") or ""
+        if t in ("value", "text", "gauge", "bar") and not n["key"]:
+            raise ValueError("Widget %d (%s): 'topic' (MQTT) bzw. 'device' und 'reading' (FHEM) fehlt" % (i + 1, t))
         if t in ("gauge", "bar"):
             n["min"] = _num(n.get("min", 0), "min", i)
             n["max"] = _num(n.get("max", 100), "max", i)
@@ -142,6 +147,7 @@ def normalize(config, publish_allow=None, command_prefix="m3dash/stat/"):
             n["command_topic"] = _command_topic(n, i, command_prefix)
         if t == "switch":
             n.setdefault("topic", n["command_topic"])
+            n["key"] = n["key"] or n["topic"]
             n.setdefault("on_value", "ON")
             n.setdefault("off_value", "OFF")
             n.setdefault("payload_on", n["on_value"])
@@ -190,12 +196,40 @@ def parse(text, command_prefix="m3dash/stat/"):
     return normalize(data, command_prefix=command_prefix)
 
 
-def topics_of(config):
-    ts = set()
-    for w in config["widgets"]:
-        if w.get("topic"):
-            ts.add(w["topic"])
-    return ts
+def _reading_key(n, i):
+    """FHEM-Reading eines Widgets als "GERÄT:READING" oder "" ohne device/reading."""
+    device, reading = str(n.get("device") or ""), str(n.get("reading") or "")
+    if reading and not device and ":" in reading:
+        device, reading = reading.split(":", 1)
+    if not device and not reading:
+        return ""
+    if not (device and reading):
+        raise ValueError("Widget %d: 'device' und 'reading' gehören zusammen" % (i + 1))
+    return device + ":" + reading
+
+
+def check_sources(config, kinds):
+    """Prüft beim Speichern, ob alle Widgets vorhandene und passende Quellen verwenden.
+
+    kinds: {Quellenname: "mqtt" | "fhemdb"}
+    """
+    for i, w in enumerate(config["widgets"]):
+        if w["type"] == "heading" or (w["type"] == "button" and not w.get("key")):
+            continue
+        name = w["source"]
+        if name not in kinds:
+            raise ValueError("Widget %d: unbekannte Quelle '%s' (vorhanden: %s)"
+                             % (i + 1, name, ", ".join(sorted(kinds)) or "keine"))
+        kind = kinds[name]
+        if w["type"] == "chart":
+            if kind != "fhemdb":
+                raise ValueError("Widget %d (chart): Quelle '%s' ist keine FHEM-Datenbank" % (i + 1, name))
+        elif kind == "mqtt" and (w.get("device") or w.get("reading")):
+            raise ValueError("Widget %d: 'device'/'reading' gibt es nur bei FHEM-Quellen, "
+                             "für MQTT 'topic' angeben" % (i + 1))
+        elif kind == "fhemdb" and ":" not in w["key"]:
+            raise ValueError("Widget %d: Quelle '%s' ist eine FHEM-Datenbank, dafür 'device' und 'reading' "
+                             "angeben" % (i + 1, name))
 
 
 def _extract(raw, path):
@@ -230,23 +264,24 @@ def _fmt_num(v, decimals):
     return s.replace(".", ",")  # deutsche Schreibweise
 
 
-def raw_value(mqtt, w):
+def raw_value(sources, w):
     """(Wert als String oder None, Alter in Sekunden oder None)."""
-    entry = mqtt.get(w.get("topic")) if w.get("topic") else None
+    src = sources.get(w["source"])
+    entry = src.get(w["key"]) if src is not None and w.get("key") else None
     if entry is None:
         return None, None
     payload, ts = entry
     return _extract(payload, w.get("json_path")), time.time() - ts
 
 
-def state(mqtt, w, idx, dash_id, theme="light"):
+def state(sources, w, idx, dash_id, theme="light"):
     """Zustand eines Widgets für Anzeige/Polling: dict mit t (Text), c (CSS-Klasse), p (Prozent), i (Bild)."""
     t = w["type"]
     if t in ("heading", "chart"):
         return None
-    if t == "button" and not w.get("topic"):
+    if t == "button" and not w.get("key"):
         return None
-    val, age = raw_value(mqtt, w)
+    val, age = raw_value(sources, w)
     stale = val is None or (w["stale_after"] and age is not None and age > w["stale_after"])
     cls = "stale" if stale else ""
     mapping = w.get("map") or {}
@@ -254,8 +289,8 @@ def state(mqtt, w, idx, dash_id, theme="light"):
         return {"t": "–", "c": "stale", "p": 0, "i": w.get("icon_off", "") if t == "switch" else ""}
 
     if t == "switch":
-        on = val == str(w["on_value"])
-        off = val == str(w["off_value"])
+        on = is_on(w, val)
+        off = val.strip().lower() == str(w["off_value"]).lower()
         text = w["text_on"] if on else (w["text_off"] if off else mapping.get(val, val))
         icon = (w["icon_on"] if on else w["icon_off"]) if w.get("icon_on") or w.get("icon_off") else ""
         return {"t": text, "c": ("on" if on else "off") + (" stale" if stale else ""), "p": 0, "i": icon}
@@ -290,6 +325,11 @@ def state(mqtt, w, idx, dash_id, theme="light"):
     q = round(num, int(w["decimals"]))
     return {"t": text, "c": cls + _level(w, num), "p": round(pct, 1),
             "i": "/img/gauge/%d/%d.png?th=%s&sz=%s&v=%s" % (dash_id, idx, theme, w["size"], q)}
+
+
+def is_on(w, val):
+    """Schalter an? Groß-/Kleinschreibung egal: FHEM meldet "on", Zigbee2MQTT "ON"."""
+    return val is not None and val.strip().lower() == str(w["on_value"]).lower()
 
 
 def _level(w, num):

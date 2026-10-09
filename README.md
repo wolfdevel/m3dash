@@ -1,6 +1,6 @@
 # Smart-Home-Dashboard
 
-Konfigurierbare Dashboards mit Benutzerverwaltung für MQTT-Livewerte und MariaDB-Historie.
+Konfigurierbare Dashboards mit Benutzerverwaltung für Livewerte aus MQTT oder der FHEM-Datenbank und Verläufe aus FHEM-DbLog.
 Läuft als ein Docker-Container (Portainer-Stack) und funktioniert auch auf alten Geräten
 wie Kindle 4 (E-Ink) und iPad 2.
 
@@ -12,7 +12,8 @@ wie Kindle 4 (E-Ink) und iPad 2.
 | Seiten | serverseitig gerendertes HTML, CSS ohne Flexbox/Grid/Variablen | Kindle 4 (WebKit 533) und iOS 9 |
 | Livewerte | MQTT-Client im Server hält den letzten Wert je Topic; Browser fragt alle *n* Sekunden per `XMLHttpRequest` (ES3-JavaScript) nach | keine WebSockets/fetch nötig; ohne JavaScript lädt die Seite per Meta-Refresh neu |
 | Gauges, Diagramme | serverseitig als PNG (matplotlib), E-Ink in Graustufen | kein SVG/Canvas im Browser nötig |
-| Historie | lesende SQL-Abfrage auf die MariaDB, frei konfigurierbar (`HISTORY_QUERY`) | Tabellenstruktur bleibt deine |
+| Quellen | Widgets wählen mit `"source"` einen Konnektor: MQTT-Broker oder FHEM-Datenbank (Tabelle `current`), weitere in der Verwaltung | wie `source` in evcc |
+| Historie | lesende SQL-Abfrage auf die FHEM-Datenbank (MySQL/MariaDB, PostgreSQL, SQLite), frei konfigurierbar (`HISTORY_QUERY`) | Tabellenstruktur bleibt deine |
 | Aktionen | Schaltflächen/Schalter senden per `POST` an den Server, der auf den Broker publiziert | Broker-Zugangsdaten bleiben im Server; funktioniert auch ohne JavaScript |
 | Benutzer | eigene SQLite-DB im Volume `/data`, Rollen `viewer` / `operator` / `admin`, Dashboard-Freigaben je Benutzer | Kindle-Konto z. B. nur lesend |
 
@@ -41,16 +42,57 @@ Alternativ auf dem Docker-Host: `docker compose up -d --build`.
 | `MQTT_SUBSCRIBE` | `#` | kommagetrennte Abos, z. B. `zigbee2mqtt/#,tasmota/#` |
 | `MQTT_COMMAND_PREFIX` | `m3dash/stat/` | Schalter und Buttons senden auf Präfix + eigenes Subtopic (`"name"` im Widget, sonst aus der Beschriftung) |
 | `MQTT_PUBLISH_ALLOW` | `m3dash/stat/#` | nur auf diese Topics darf gesendet werden (wird beim Speichern und beim Senden geprüft) |
-| `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASSWORD` | – , `3306`, `fhem` | MariaDB (ein Nur-Lese-Benutzer reicht) |
+| `DB_BACKEND` | `mysql` | FHEM-Datenbank: `mysql` (auch MariaDB), `postgresql` oder `sqlite` |
+| `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASSWORD` | – , 3306/5432, `fhem` | Zugang zur FHEM-Datenbank (ein Nur-Lese-Benutzer reicht); mit `DB_HOST` entsteht die Quelle `fhem` |
+| `DB_PATH` | – | nur SQLite: Pfad zur `fhem.db` im Container (Datei als Volume einbinden) |
+| `CURRENT_INTERVAL` | `10` | Sekunden zwischen zwei Abfragen der Tabelle `current` |
+| `CURRENT_QUERY` | siehe unten | SQL, das `(DEVICE, READING, VALUE, TIMESTAMP)` liefert |
 | `HISTORY_QUERY` | siehe unten | SQL, das `(Zeitstempel, Wert)` liefert |
 | `HISTORY_MAX_POINTS` | `600` | Diagramme werden auf so viele Punkte gemittelt |
 | `CHART_CACHE_SECONDS` | `60` | wie lange ein gerendertes Diagramm wiederverwendet wird |
 | `TZ` | `Europe/Vienna` | Zeitzone für Achsen und Protokoll |
 
+### Quellen: MQTT und FHEM-Datenbank
+
+Jedes Widget holt seinen Wert aus einer *Quelle*, ausgewählt mit `"source"` (ähnlich wie in evcc):
+
+| Quelle | Woher | Angabe im Widget |
+|---|---|---|
+| `mqtt` (Standard) | Broker aus `MQTT_HOST` | `"topic"`, optional `"json_path"` |
+| `fhem` | FHEM-Datenbank aus `DB_HOST`, Tabelle `current` | `"device"` + `"reading"`, oder kurz `"reading": "GERÄT:READING"` |
+| eigene | unter *Verwaltung → Quellen* angelegt | je nach Typ wie oben |
+
+```json
+{"type": "value", "label": "Außen", "source": "fhem", "device": "Aussen", "reading": "temperature", "unit": "°C"}
+{"type": "switch", "label": "Stehlampe", "source": "fhem", "reading": "Stehlampe:state", "name": "stehlampe"}
+```
+
+Ohne `"source"` bleibt alles wie bisher (MQTT), bestehende Dashboards funktionieren unverändert. Ein Schalter mit
+FHEM-Quelle zeigt seinen Zustand aus `current` an und sendet weiterhin per MQTT auf `MQTT_COMMAND_PREFIX` + Name;
+`on_value`/`off_value` vergleichen ohne Rücksicht auf Groß-/Kleinschreibung (FHEM meldet `on`, Zigbee2MQTT `ON`).
+
+Die Tabelle `current` wird komplett gelesen, alle `CURRENT_INTERVAL` Sekunden (je Quelle einstellbar), aber nur
+solange ein Dashboard mit Werten daraus offen ist. FHEM füllt `current` nur, wenn beim DbLog-Device
+`DbLogType` auf `Current` oder `Current/History` steht. `stale_after` funktioniert auch hier, gemessen am
+`TIMESTAMP` der Zeile.
+
+Unter *Verwaltung → Quellen* lassen sich weitere FHEM-Datenbanken (MySQL/MariaDB, PostgreSQL, SQLite) und weitere
+MQTT-Broker anlegen, mit eigenem Abfrageintervall und eigenem SQL. Die Quellen aus den Umgebungsvariablen (`mqtt`,
+`fhem`) sind dort sichtbar, aber nur über den Stack änderbar. Passwörter eigener Quellen liegen in der App-Datenbank
+im Volume `/data`. Unter *Verwaltung → Werte* sieht man je Quelle alle Topics bzw. Readings mit ihrem letzten Wert.
+
+Der Datenbankbenutzer braucht Leserechte auf beide Tabellen, bei MariaDB z. B.:
+
+```sql
+GRANT SELECT ON fhem.current TO 'm3dash'@'%';
+GRANT SELECT ON fhem.history TO 'm3dash'@'%';
+```
+
 ### Historie aus FHEM (DbLog)
 
-Standardmäßig liest das Dashboard die FHEM-Tabelle `history`. Im Diagramm-Widget wird eine Serie als
-`"source": "GERÄT:READING"` angegeben, z. B. `"Wohnzimmer_Sensor:temperature"`.
+Standardmäßig liest das Dashboard die FHEM-Tabelle `history` der Quelle `fhem`. Im Diagramm-Widget wird eine Serie als
+`"source": "GERÄT:READING"` angegeben, z. B. `"Wohnzimmer_Sensor:temperature"`. Eine andere FHEM-Datenbank wählt
+man für das ganze Diagramm mit `"source"` auf Widget-Ebene, z. B. `{"type": "chart", "source": "fhem_keller", "series": [...]}`.
 
 ```sql
 SELECT TIMESTAMP, VALUE FROM history

@@ -21,9 +21,16 @@ h2 { font-size: 18px; margin: 4px 0 0 0; }
 #top a#burger { padding: 9px 8px; margin-right: 4px; -webkit-border-radius: 4px; border-radius: 4px; }
 #burger span { display: block; width: 20px; height: 0; border-top: 3px solid; margin: 0 0 4px 0; font-size: 0; line-height: 0; }
 #burger span + span + span { margin-bottom: 0; }
-#menu { padding: 4px 8px; }
-#menu a { display: block; padding: 10px 12px; font-size: 18px; }
-#menu a.cur { font-weight: bold; }
+/* Benutzer-Symbol: Kopf (Ring) und Schultern (Bogen) aus Rändern */
+#top a#user { padding: 5px 8px 4px 8px; margin: 0; text-align: center; -webkit-border-radius: 4px; border-radius: 4px; }
+#user span { display: block; margin: 0 auto; font-size: 0; line-height: 0; border-style: solid; }
+#user .head { width: 12px; height: 12px; border-width: 3px; -webkit-border-radius: 8px; border-radius: 8px; }
+#user .body { width: 22px; height: 9px; margin-top: 2px; border-width: 3px 3px 0 3px;
+              -webkit-border-radius: 11px 11px 0 0; border-radius: 11px 11px 0 0; }
+.drop { padding: 4px 8px; }
+.drop a { display: block; padding: 10px 12px; font-size: 18px; }
+.drop a.cur { font-weight: bold; }
+#umenu { text-align: right; }
 ul.dashlist { list-style: none; padding: 0; margin: 12px 0; }
 ul.dashlist a { display: block; padding: 10px 4px; font-size: 18px; }
 
@@ -81,7 +88,6 @@ img.icon.lead { float: left; margin-right: 8px; }
 
 @media (max-width: 520px) {
   .stack .cell { width: 100% !important; }
-  #top .nav, #top .tools { float: none; display: block; }
   .val { font-size: 26px; }
 }
 
@@ -89,9 +95,9 @@ img.icon.lead { float: left; margin-right: 8px; }
 body.light { background: #eef0f3; color: #222; }
 .light a { color: #1f5f99; }
 .light #top { background: #fff; border-bottom: 1px solid #d5d9de; }
-.light #burger span { border-color: #1f5f99; }
-.light #burger.open { background: #d5d9de; }
-.light #menu { background: #fff; border-bottom: 1px solid #d5d9de; }
+.light #burger span, .light #user span { border-color: #1f5f99; }
+.light #burger.open, .light #user.open { background: #d5d9de; }
+.light .drop { background: #fff; border-bottom: 1px solid #d5d9de; }
 .light #top a.cur { color: #000; }
 .light .card { background: #fff; border: 1px solid #dde1e6; }
 .light .label, .light .stamp, .light .sub, .light .hint { color: #6b7480; }
@@ -113,9 +119,9 @@ body.light { background: #eef0f3; color: #222; }
 body.dark { background: #121417; color: #eee; }
 .dark a { color: #7fb8f0; }
 .dark #top { background: #1b1e22; border-bottom: 1px solid #2c3136; }
-.dark #burger span { border-color: #7fb8f0; }
-.dark #burger.open { background: #2c3136; }
-.dark #menu { background: #1b1e22; border-bottom: 1px solid #2c3136; }
+.dark #burger span, .dark #user span { border-color: #7fb8f0; }
+.dark #burger.open, .dark #user.open { background: #2c3136; }
+.dark .drop { background: #1b1e22; border-bottom: 1px solid #2c3136; }
 .dark #top a.cur { color: #fff; }
 .dark .card { background: #1b1e22; border: 1px solid #2c3136; }
 .dark .label, .dark .stamp, .dark .sub, .dark .hint { color: #9aa3ad; }
@@ -137,9 +143,9 @@ body.dark { background: #121417; color: #eee; }
 body.eink { background: #fff; color: #000; font-size: 18px; }
 .eink a { color: #000; text-decoration: underline; }
 .eink #top { border-bottom: 2px solid #000; }
-.eink #burger span { border-color: #000; }
-.eink #burger.open { border: 2px solid #000; }
-.eink #menu { border-bottom: 2px solid #000; }
+.eink #burger span, .eink #user span { border-color: #000; }
+.eink #burger.open, .eink #user.open { border: 2px solid #000; }
+.eink .drop { border-bottom: 2px solid #000; }
 .eink #top a.cur { text-decoration: none; border: 2px solid #000; }
 .eink .card { background: #fff; border: 2px solid #000; -webkit-border-radius: 0; border-radius: 0; }
 .eink .label, .eink .stamp, .eink .sub, .eink .hint { color: #000; }

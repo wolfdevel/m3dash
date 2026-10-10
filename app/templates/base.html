@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <title>{% block title %}Smart Home{% endblock %}</title>
-<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=2">
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=3">
 {% block head %}{% endblock %}
 </head>
 <body class="{{ theme }}">
@@ -17,25 +17,35 @@
     {%- elif nav|length == 1 %}<a href="{{ url_for('views.dashboard', slug=nav[0].slug) }}">{{ nav[0].title }}</a>{% endif %}
   </span>
   <span class="tools">
-    {% if user.role == 'admin' %}<a href="{{ url_for('admin.status') }}">Verwaltung</a>{% endif %}
-    <a href="{{ url_for('views.account') }}">{{ user.username }}</a>
-    <a href="{{ url_for('views.logout') }}">Abmelden</a>
+    <a href="{{ url_for('views.account') }}" id="user" title="{{ user.username }}"><span class="head"></span><span class="body"></span></a>
   </span>
   {% endif %}
 </div>
-{% if user and nav|length > 1 %}
-{#- Ohne JavaScript führt das Burger-Symbol auf die Übersichtsseite; mit JavaScript klappt diese Liste auf. #}
-<div id="menu" style="display:none">{% for d in nav %}<a href="{{ url_for('views.dashboard', slug=d.slug) }}"{% if dash is defined and dash.id == d.id %} class="cur"{% endif %}>{{ d.title }}</a>{% endfor %}</div>
+{% if user %}
+{#- Ohne JavaScript führen Burger und Benutzer-Symbol auf eigene Seiten (Übersicht bzw. Mein Konto);
+    mit JavaScript klappen diese Listen auf. #}
+{% if nav|length > 1 %}<div id="menu" class="drop" style="display:none">{% for d in nav %}<a href="{{ url_for('views.dashboard', slug=d.slug) }}"{% if dash is defined and dash.id == d.id %} class="cur"{% endif %}>{{ d.title }}</a>{% endfor %}</div>{% endif %}
+<div id="umenu" class="drop" style="display:none">
+  <a href="{{ url_for('views.account') }}" class="cur">{{ user.username }}</a>
+  {% if user.role == 'admin' %}<a href="{{ url_for('admin.status') }}">Verwaltung</a>{% endif %}
+  <a href="{{ url_for('views.logout') }}">Abmelden</a>
+</div>
 <script type="text/javascript">
 (function () {
-  var b = document.getElementById("burger"), m = document.getElementById("menu");
-  if (!b || !m) { return; }
-  b.onclick = function () {
-    var open = m.style.display !== "none";
-    m.style.display = open ? "none" : "block";
-    b.className = open ? "" : "open";
-    return false;
-  };
+  function $(id) { return document.getElementById(id); }
+  function bind(btn, menu, other, otherBtn) {
+    var b = $(btn), m = $(menu);
+    if (!b || !m) { return; }
+    b.onclick = function () {
+      var open = m.style.display !== "none", o = $(other);
+      if (o) { o.style.display = "none"; $(otherBtn).className = ""; }
+      m.style.display = open ? "none" : "block";
+      b.className = open ? "" : "open";
+      return false;
+    };
+  }
+  bind("burger", "menu", "umenu", "user");
+  bind("user", "umenu", "menu", "burger");
 })();
 </script>
 {% endif %}

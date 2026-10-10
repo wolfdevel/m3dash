@@ -5,14 +5,16 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <title>{% block title %}Smart Home{% endblock %}</title>
-<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=1">
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=2">
 {% block head %}{% endblock %}
 </head>
 <body class="{{ theme }}">
 <div id="top">
   {% if user %}
   <span class="nav">
-    {% for d in nav %}<a href="{{ url_for('views.dashboard', slug=d.slug) }}"{% if dash is defined and dash.id == d.id %} class="cur"{% endif %}>{{ d.title }}</a>{% endfor %}
+    {%- if nav|length > 1 %}<a href="{{ url_for('views.dashboards') }}" id="burger" title="Dashboards"><span></span><span></span><span></span></a>{% endif %}
+    {%- if dash is defined %}<h1>{{ dash.title }}</h1>{% block stamp %}{% endblock %}
+    {%- elif nav|length == 1 %}<a href="{{ url_for('views.dashboard', slug=nav[0].slug) }}">{{ nav[0].title }}</a>{% endif %}
   </span>
   <span class="tools">
     {% if user.role == 'admin' %}<a href="{{ url_for('admin.status') }}">Verwaltung</a>{% endif %}
@@ -21,6 +23,22 @@
   </span>
   {% endif %}
 </div>
+{% if user and nav|length > 1 %}
+{#- Ohne JavaScript führt das Burger-Symbol auf die Übersichtsseite; mit JavaScript klappt diese Liste auf. #}
+<div id="menu" style="display:none">{% for d in nav %}<a href="{{ url_for('views.dashboard', slug=d.slug) }}"{% if dash is defined and dash.id == d.id %} class="cur"{% endif %}>{{ d.title }}</a>{% endfor %}</div>
+<script type="text/javascript">
+(function () {
+  var b = document.getElementById("burger"), m = document.getElementById("menu");
+  if (!b || !m) { return; }
+  b.onclick = function () {
+    var open = m.style.display !== "none";
+    m.style.display = open ? "none" : "block";
+    b.className = open ? "" : "open";
+    return false;
+  };
+})();
+</script>
+{% endif %}
 {% with msgs = get_flashed_messages() %}{% if msgs %}<div class="flash">{% for m in msgs %}<div>{{ m }}</div>{% endfor %}</div>{% endif %}{% endwith %}
 <div id="main">
 {% block body %}{% endblock %}

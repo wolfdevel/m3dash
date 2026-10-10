@@ -3,7 +3,7 @@
 <div class="box">
   <h1>Dashboards</h1>
   {% if dashboards %}
-  <ul>{% for d in dashboards %}<li><a href="{{ url_for('views.dashboard', slug=d.slug) }}">{{ d.title }}</a></li>{% endfor %}</ul>
+  <ul class="dashlist">{% for d in dashboards %}<li><a href="{{ url_for('views.dashboard', slug=d.slug) }}">{{ d.title }}</a></li>{% endfor %}</ul>
   {% elif user.role == 'admin' %}
   <p>Noch keine Dashboards vorhanden. <a href="{{ url_for('admin.dashboard_edit') }}">Erstes Dashboard anlegen</a></p>
   {% else %}

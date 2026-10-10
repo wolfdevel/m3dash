@@ -12,11 +12,22 @@ h2 { font-size: 18px; margin: 4px 0 0 0; }
 #top .nav { float: left; }
 #top .tools { float: right; }
 #top a.cur { font-weight: bold; }
+#top h1 { display: inline-block; padding: 6px 8px 6px 2px; vertical-align: middle; }
+#top .nav a, #top .nav .stamp, #top .nav #msg { vertical-align: middle; }
 #main { padding: 4px 8px 16px 8px; }
 .flash div { padding: 8px 12px; margin: 0 8px 6px 8px; }
 
-.dashhead { padding: 4px 4px 8px 4px; }
-.stamp { font-size: 12px; margin-left: 10px; }
+/* Burger: drei Balken aus Rändern statt Zeichen ☰ (fehlt in alten Schriften) */
+#top a#burger { padding: 9px 8px; margin-right: 4px; -webkit-border-radius: 4px; border-radius: 4px; }
+#burger span { display: block; width: 20px; height: 0; border-top: 3px solid; margin: 0 0 4px 0; font-size: 0; line-height: 0; }
+#burger span + span + span { margin-bottom: 0; }
+#menu { padding: 4px 8px; }
+#menu a { display: block; padding: 10px 12px; font-size: 18px; }
+#menu a.cur { font-weight: bold; }
+ul.dashlist { list-style: none; padding: 0; margin: 12px 0; }
+ul.dashlist a { display: block; padding: 10px 4px; font-size: 18px; }
+
+.stamp { font-size: 12px; margin-left: 4px; }
 #msg { font-size: 13px; margin-left: 10px; }
 
 .grid { font-size: 0; letter-spacing: 0; } /* entfernt Lücken zwischen inline-blocks */
@@ -78,6 +89,9 @@ img.icon.lead { float: left; margin-right: 8px; }
 body.light { background: #eef0f3; color: #222; }
 .light a { color: #1f5f99; }
 .light #top { background: #fff; border-bottom: 1px solid #d5d9de; }
+.light #burger span { border-color: #1f5f99; }
+.light #burger.open { background: #d5d9de; }
+.light #menu { background: #fff; border-bottom: 1px solid #d5d9de; }
 .light #top a.cur { color: #000; }
 .light .card { background: #fff; border: 1px solid #dde1e6; }
 .light .label, .light .stamp, .light .sub, .light .hint { color: #6b7480; }
@@ -99,6 +113,9 @@ body.light { background: #eef0f3; color: #222; }
 body.dark { background: #121417; color: #eee; }
 .dark a { color: #7fb8f0; }
 .dark #top { background: #1b1e22; border-bottom: 1px solid #2c3136; }
+.dark #burger span { border-color: #7fb8f0; }
+.dark #burger.open { background: #2c3136; }
+.dark #menu { background: #1b1e22; border-bottom: 1px solid #2c3136; }
 .dark #top a.cur { color: #fff; }
 .dark .card { background: #1b1e22; border: 1px solid #2c3136; }
 .dark .label, .dark .stamp, .dark .sub, .dark .hint { color: #9aa3ad; }
@@ -120,6 +137,9 @@ body.dark { background: #121417; color: #eee; }
 body.eink { background: #fff; color: #000; font-size: 18px; }
 .eink a { color: #000; text-decoration: underline; }
 .eink #top { border-bottom: 2px solid #000; }
+.eink #burger span { border-color: #000; }
+.eink #burger.open { border: 2px solid #000; }
+.eink #menu { border-bottom: 2px solid #000; }
 .eink #top a.cur { text-decoration: none; border: 2px solid #000; }
 .eink .card { background: #fff; border: 2px solid #000; -webkit-border-radius: 0; border-radius: 0; }
 .eink .label, .eink .stamp, .eink .sub, .eink .hint { color: #000; }

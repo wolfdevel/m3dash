@@ -1,8 +1,8 @@
 {% extends "base.html" %}
 {% block title %}{{ dash.title }}{% endblock %}
 {% block head %}<noscript><meta http-equiv="refresh" content="{{ refresh }}"></noscript>{% endblock %}
+{% block stamp %}<span class="stamp" id="stamp">Stand {{ now }}</span><span id="msg"></span>{% endblock %}
 {% block body %}
-<div class="dashhead"><h1>{{ dash.title }}</h1><span class="stamp" id="stamp">Stand {{ now }}</span><span id="msg"></span></div>
 {#- Zwischen den Zellen darf kein Leerraum stehen: ältere Browser (Kindle) haben eine Mindestschriftgröße,
     dann hilft font-size:0 nicht und die letzte Zelle einer Reihe rutscht in die nächste Zeile. #}
 <div class="grid{% if cfg.mobile_stack %} stack{% endif %}">

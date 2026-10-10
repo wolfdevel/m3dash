@@ -93,6 +93,13 @@ def index():
     return render_template("index.html", dashboards=dashes)
 
 
+@bp.route("/dashboards")
+@login_required
+def dashboards():
+    """Übersicht aller freigegebenen Dashboards; Ziel des Burger-Symbols, wenn kein JavaScript läuft."""
+    return render_template("index.html", dashboards=current_app.store.dashboards_for(current_user()))
+
+
 @bp.route("/d/<slug>")
 @login_required
 def dashboard(slug):

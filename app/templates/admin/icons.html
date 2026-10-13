@@ -7,7 +7,7 @@
 <p class="hint">Eigene Symbole für Werte, Schalter und Buttons. Im Dashboard mit <span class="mono">"icon": "dateiname.png"</span>
 verwenden (für Schalter optional <span class="mono">"icon_on"</span> / <span class="mono">"icon_off"</span>).
 Für Kindle und ältere Geräte am besten PNG oder GIF in Schwarz auf transparentem/weißem Hintergrund, etwa 48–96 px groß.
-SVG funktioniert auf neueren Geräten. Statt eines Dateinamens geht auch eine volle URL, z.B. ein FHEM-Symbol.</p>
+SVG geht auch: das Dashboard zeigt SVG-Symbole als PNG an, damit sie auch auf alten Geräten erscheinen. Statt eines Dateinamens geht auch eine volle URL, z.B. ein FHEM-Symbol.</p>
 <form method="post" enctype="multipart/form-data">
   <input type="hidden" name="csrf" value="{{ csrf_token() }}">
   <input type="file" name="files" multiple accept=".png,.gif,.jpg,.jpeg,.svg">

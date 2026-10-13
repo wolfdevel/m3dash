@@ -5,6 +5,8 @@ import time
 from flask import (Blueprint, Response, abort, current_app, flash, jsonify, redirect, render_template,
                    request, send_from_directory, session, url_for)
 
+from werkzeug.security import safe_join
+
 from . import render, widgets
 from .auth import check_csrf, csrf_token, current_user, login_required, theme_for
 
@@ -232,7 +234,18 @@ def chart_png(dash_id, idx):
 @login_required
 def icon(name):
     # Eigene Symbole: Dateien im Volume unter /data/icons (hochladen unter Verwaltung > Symbole)
-    resp = send_from_directory(os.path.join(current_app.cfg.DATA_DIR, "icons"), name, max_age=86400)
+    folder = os.path.join(current_app.cfg.DATA_DIR, "icons")
+    h = request.args.get("png", type=int)
+    if h and name.lower().endswith(".svg"):
+        # SVG als PNG in der gewünschten Höhe (Dashboard verlinkt SVG-Symbole so, siehe widgets.py)
+        path = safe_join(folder, name)
+        if not path or not os.path.isfile(path):
+            abort(404)
+        try:
+            return _png(render.icon_png(path, max(8, min(h, 800))), 86400)
+        except Exception as e:
+            current_app.logger.warning("Symbol %s lässt sich nicht als PNG darstellen: %s", name, e)
+    resp = send_from_directory(folder, name, max_age=86400)
     resp.headers["Cache-Control"] = "private, max-age=86400"
     # SVG-Dateien direkt geöffnet dürfen kein Skript ausführen
     resp.headers["Content-Security-Policy"] = "default-src 'none'; style-src 'unsafe-inline'; img-src data:"

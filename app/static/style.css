@@ -205,3 +205,8 @@ body.eink { background: #fff; color: #000; font-size: 18px; }
 .card.sz-xl .track { height: 24px; }
 
 .card.hasicon form.act button { padding: 4px; }
+
+/* Halbe Höhe ("half": true): zwei Buttons übereinander in einer Zelle, z.B. Rollo auf/ab */
+.card.half { min-height: 0; }
+.card.half.top { margin-bottom: 4px; }
+.card.half form.act button { padding-top: 1px; padding-bottom: 1px; line-height: 1.1; }

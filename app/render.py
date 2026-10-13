@@ -4,6 +4,7 @@ PNG funktioniert in jedem Browser, auch ohne SVG/Canvas (Kindle 4). Für E-Ink w
 auf Graustufen umgerechnet.
 """
 import io
+import os
 import math
 import threading
 import time
@@ -246,3 +247,25 @@ def _chart(series_data, w, theme, width, height):
                     t.set_color(c["fg"])
         fig.tight_layout(pad=0.4, rect=(0, min(0.5, bottom), 1, 1 - min(0.5, top)))
         return _to_png(fig, theme)
+
+
+def _no_fetch(url, resource_type=None):
+    # Nur eingebettete Daten (data:...) erlauben, keine Dateien oder Netzwerk-Adressen
+    if url.startswith("data:"):
+        from cairosvg.url import fetch
+        return fetch(url, resource_type)
+    raise ValueError("Externe Inhalte in Symbolen sind nicht erlaubt: %s" % url[:80])
+
+
+def icon_png(path, height):
+    """SVG-Symbol als PNG in fester Höhe (px). Alte Browser (Android 2.x) zeigen gar kein SVG, der Kindle
+    verzerrt SVGs ohne width/height-Angabe (z.B. Material Design Icons). Als PNG klappt es überall."""
+    from cairosvg.surface import PNGSurface  # erst hier laden: wird nur für SVG-Symbole gebraucht
+
+    key = ("icon", path, os.path.getmtime(path), height)
+
+    def make():
+        with open(path, "rb") as f:
+            src = f.read()
+        return PNGSurface.convert(bytestring=src, output_height=height, url_fetcher=_no_fetch)
+    return _cached(key, 86400, make)

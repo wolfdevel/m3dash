@@ -131,6 +131,11 @@ def normalize(config, publish_allow=None, command_prefix="m3dash/stat/"):
             n["icon_on"] = n["icon_on"] or n["icon"]
             n["icon_off"] = n["icon_off"] or n["icon"]
         n["icon_size"] = _int(n.get("icon_size", ICON_SIZES[n["size"]]), "icon_size", i, 8, 400)
+        for k in ("icon", "icon_on", "icon_off"):
+            n[k] = _svg_as_png(n[k], n["icon_size"])
+        n["half"] = bool(n.get("half", False))
+        if n["half"] and t not in ("button", "switch"):
+            raise ValueError("Widget %d: 'half' gibt es nur für Buttons und Schalter" % (i + 1))
         # Woher der Wert kommt: "source" wählt die Quelle (Standard "mqtt", Diagramme "fhem"),
         # bei FHEM-Quellen gibt "device" + "reading" (oder "reading": "GERÄT:READING") den Wert an.
         n["source"] = str(n.get("source") or ("fhem" if t == "chart" else "mqtt"))
@@ -185,7 +190,29 @@ def normalize(config, publish_allow=None, command_prefix="m3dash/stat/"):
             if n.get("legend", "top") not in LEGEND:
                 raise ValueError("Widget %d (chart): 'legend' muss einer der Werte %s sein" % (i + 1, ", ".join(LEGEND)))
         out["widgets"].append(n)
+    _pair_halves(out["widgets"])
     return out
+
+
+def _pair_halves(ws):
+    """Zwei aufeinanderfolgende Widgets mit "half": true und gleicher Breite teilen sich eine Zelle
+    (oben/unten), z.B. Rollo auf/ab. "pair" ist dann "top" bzw. "bottom"."""
+    i = 0
+    while i < len(ws):
+        ws[i]["pair"] = ""
+        if ws[i]["half"] and i + 1 < len(ws) and ws[i + 1]["half"] and ws[i + 1]["width"] == ws[i]["width"]:
+            ws[i]["pair"], ws[i + 1]["pair"] = "top", "bottom"
+            i += 2
+        else:
+            i += 1
+
+
+def _svg_as_png(url, size):
+    """Eigene SVG-Symbole (unter /icons/) als PNG in Symbolgröße ausliefern lassen: Android 2.x kann kein SVG,
+    der Kindle verzerrt SVGs ohne Größenangabe. Fremde URLs bleiben unverändert."""
+    if url.startswith("/icons/") and url.lower().endswith(".svg"):
+        return "%s?png=%d" % (url, size)
+    return url
 
 
 def parse(text, command_prefix="m3dash/stat/"):

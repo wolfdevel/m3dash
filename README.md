@@ -141,12 +141,22 @@ Für kompakte Ansichten (z.B. Kindle) lässt sich die Darstellung je Dashboard u
 | `"frame": false` | Dashboard oder Widget | ohne Rahmen und Hintergrund |
 | `"align"` | Widget | `left`, `center`, `right` |
 | `"icon"`, `"icon_size"` | Widget | Symbol vor dem Wert bzw. im Button; bei Schaltern auch `"icon_on"`/`"icon_off"` |
+| `"half": true` | Button, Schalter | halbe Höhe; zwei aufeinanderfolgende mit gleicher Breite teilen sich eine Zelle (oben/unten) |
 | `"columns"` | Dashboard | bis zu 12 Spalten für feine Raster |
 | `"mobile_stack": false` | Dashboard | auf schmalen Handys nicht alles untereinander stapeln |
 
 Symbole lädt man unter *Verwaltung → Symbole* hoch (landen im Volume unter `/data/icons`) und verwendet sie mit
 `"icon": "lampe.png"`. Eine volle URL geht auch, etwa ein Symbol aus FHEM. Für den Kindle am besten schwarze
-PNG/GIF-Symbole auf transparentem Hintergrund. Schalter mit Symbol zeigen „an“ grau hinterlegt.
+PNG/GIF-Symbole auf transparentem Hintergrund. Hochgeladene SVG-Symbole liefert der Server als PNG in der
+passenden Größe aus, damit sie auch auf Geräten ohne SVG (Android 2.x) und auf dem Kindle richtig erscheinen.
+Schalter mit Symbol zeigen „an“ grau hinterlegt.
+
+Rollo auf/ab übereinander: zwei Buttons mit `"half": true` direkt hintereinander landen in einer Zelle.
+
+```json
+{"type": "button", "label": "Rollo 1 auf", "name": "rollo1", "payload": "up",   "text": "Λ", "half": true},
+{"type": "button", "label": "Rollo 1 ab",  "name": "rollo1", "payload": "down", "text": "V", "half": true}
+```
 Ein kompaktes Beispiel im Stil eines FHEM-Kindle-Dashboards steht in `examples/kindle.json`.
 
 ![Kompaktes Dashboard auf dem Kindle](docs/screenshot-kindle-kompakt.png)

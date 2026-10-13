@@ -7,10 +7,10 @@
     dann hilft font-size:0 nicht und die letzte Zelle einer Reihe rutscht in die nächste Zeile. #}
 <div class="grid{% if cfg.mobile_stack %} stack{% endif %}">
 {%- for w in cfg.widgets %}{% set i = loop.index0 %}{% set s = states[i] or {'t': '', 'c': '', 'p': 0, 'i': ''} %}
-{%- set base = 'card ' ~ w.type ~ ' sz-' ~ w.size ~ ('' if w.frame else ' noframe') ~ (' al-' ~ w.align if w.align else '') ~ (' hasicon' if w.icon or w.icon_on else '') %}
+{%- set base = 'card ' ~ w.type ~ ' sz-' ~ w.size ~ ('' if w.frame else ' noframe') ~ (' al-' ~ w.align if w.align else '') ~ (' hasicon' if w.icon or w.icon_on else '') ~ (' half' if w.half else '') ~ (' ' ~ w.pair if w.pair else '') %}
 {%- set fs = ('font-size:%dpx;' % w.font_size) if w.font_size else '' %}
 {%- set isz = w.icon_size -%}
-<div class="cell" style="width:{{ '%.4f'|format(100.0 * w.width / cfg.columns - 0.0001) }}%"><div class="{{ base }} {{ s.c }}" id="w{{ i }}" data-base="{{ base }}"{% if w.type != 'chart' and w.height %} style="min-height:{{ w.height }}px"{% endif %}>
+{%- if w.pair != 'bottom' %}<div class="cell" style="width:{{ '%.4f'|format(100.0 * w.width / cfg.columns - 0.0001) }}%">{% endif %}<div class="{{ base }} {{ s.c }}" id="w{{ i }}" data-base="{{ base }}"{% if w.type != 'chart' and w.height %} style="min-height:{{ w.height }}px"{% endif %}>
 {%- if w.type == 'heading' %}
   <h2{% if fs %} style="{{ fs }}"{% endif %}>{% if w.icon %}<img class="icon" src="{{ w.icon }}" height="{{ isz }}" alt=""> {% endif %}{{ w.label }}</h2>
 {%- else %}
@@ -38,7 +38,7 @@
   <img class="chart" data-src="/img/chart/{{ dash.id }}/{{ i }}.png?th={{ theme }}&amp;w={{ (600 * w.width / cfg.columns)|int }}" src="/img/chart/{{ dash.id }}/{{ i }}.png?th={{ theme }}&amp;w={{ (600 * w.width / cfg.columns)|int }}&amp;t={{ chart_bucket }}" alt="{{ w.label }}">
   {% endif %}
 {%- endif %}
-</div></div>
+</div>{% if w.pair != 'top' %}</div>{% endif %}
 {%- endfor %}
 </div>
 {% endblock %}
